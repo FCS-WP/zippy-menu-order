@@ -1,0 +1,1170 @@
+openapi: 3.0.4
+info:
+  title: Zippy Bookings - OpenAPI 3.0
+  description: API for Zippy Bookings system including stores, bookings, operations, and timeslots.
+  termsOfService: https://swagger.io/terms/
+  contact:
+    email: apiteam@swagger.io
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/NHALE_2/Booking/1.0.0
+  - url: https://api.zippybookings.com/v1
+tags:
+  - name: booking
+    description: Operations related to Bookings
+    externalDocs:
+      description: Learn more about bookings
+      url: https://your_domain.com/wp-json/booking/v1
+
+paths:
+  /bookings:
+    post:
+      tags:
+        - booking
+      summary: Create a new booking (Admin)
+      description: Create a booking for a store, service, and timeslot with customer info and optional meta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingCreatedResponse"
+        "400":
+          description: Invalid request (e.g., missing fields, slot not available)
+        "404":
+          description: Store, service, or slot not found
+        "409":
+          description: Slot is fully booked
+        "500":
+          description: Server error
+
+    get:
+      tags:
+        - booking
+      summary: Get list of bookings
+      description: Retrieve all bookings with optional filters like status or date
+      parameters:
+        - name: customer_id
+          in: query
+          description: Filter bookings by customer (WooCommerce user ID)
+          required: false
+          schema:
+            type: integer
+        - name: status
+          in: query
+          description: Filter by booking status
+          required: false
+          schema:
+            type: string
+            enum: [pending, processing, completed, cancelled]
+        - name: date_from
+          in: query
+          description: Filter bookings created after this date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: date_to
+          in: query
+          description: Filter bookings created before this date (YYYY-MM-DD)
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: limit
+          in: query
+          description: Number of bookings per page (default 20)
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: page
+          in: query
+          description: Pagination page number (default 1)
+          required: false
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: List of bookings with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+
+                  data:
+                    type: array
+                    description: Array of booking objects
+                    items:
+                      $ref: "#/components/schemas/Booking"
+
+                  pagination:
+                    type: object
+                    description: Object of Paginations
+                    items:
+                      $ref: "#/components/schemas/Pagination"
+
+        "400":
+          description: Invalid query parameters
+        "500":
+          description: Server error
+
+    delete:
+      tags:
+        - booking
+      summary: Cancel a booking
+      description: Delete or cancel a booking by ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: The ID of the store to delete
+              required:
+                - id
+      responses:
+        "204":
+          description: Booking cancelled successfully (no content)
+        "404":
+          description: Booking not found
+        "500":
+          description: Server error
+
+  /bookings/create:
+    post:
+      tags:
+        - booking
+      summary: Create a new booking (User)
+      description: Create a booking for a store, service, and timeslot with customer info and optional meta.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingInput"
+      responses:
+        "201":
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingCreatedResponse"
+        "400":
+          description: Invalid request (e.g., missing fields, slot not available)
+        "404":
+          description: Store, service, or slot not found
+        "409":
+          description: Slot is fully booked
+        "500":
+          description: Server error
+
+  /bookings/get-booking-summary:
+    get:
+      tags:
+        - booking
+      summary: Get booking summary
+      description: Retrieve a summary of bookings including counts by status.
+      responses:
+        "200":
+          description: List of bookings with pagination
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingSummaryResponse"
+        "400":
+          description: Invalid query parameters
+        "500":
+          description: Server error
+
+  /bookings/search-customers:
+    get:
+      tags:
+        - booking
+      summary: Search for customers
+      description: Retrieve a list of customers based on search criteria.
+      parameters:
+        - name: q
+          in: query
+          description: Search query (name, email, etc.)
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of bookings with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                  data:
+                    type: array
+                    description: Array of customer objects
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        label:
+                          type: string
+        "400":
+          description: Invalid query parameters
+        "500":
+          description: Server error
+
+  /bookings/{booking_id}:
+    get:
+      tags:
+        - booking
+      summary: Get a booking by ID
+      description: Retrieve details of a single booking
+      parameters:
+        - name: booking_id
+          in: path
+          required: true
+          description: ID of the booking
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Booking details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/Booking"
+        "404":
+          description: Booking not found
+        "500":
+          description: Server error
+
+    put:
+      tags:
+        - booking
+      summary: Update a booking
+      description: Update an existing booking by ID
+      parameters:
+        - name: booking_id
+          in: path
+          required: true
+          description: ID of the booking
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Booking"
+      responses:
+        "200":
+          description: Booking updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/Booking"
+        "400":
+          description: Invalid request
+        "404":
+          description: Booking not found
+        "500":
+          description: Server error
+
+  /bookings/valid:
+    post:
+      tags:
+        - booking
+      summary: Check the current times_slot is valid?
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookingValidRequest"
+      responses:
+        "200":
+          description: List of available timeslots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeSlotValid"
+        "400":
+          description: Invalid request parameters
+        "404":
+          description: No slots found
+        "500":
+          description: Server error
+
+  /stores:
+    get:
+      tags:
+        - store
+      summary: Get list of stores
+      description: Retrieve all stores with pagination support
+      parameters:
+        - name: limit
+          in: query
+          description: Number of stores per page (default 20)
+          schema:
+            type: integer
+            default: 20
+        - name: page
+          in: query
+          description: Pagination page number (default 1)
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: List of stores with pagination
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreResponse"
+        "400":
+          description: Invalid query parameters
+        "500":
+          description: Server error
+
+    delete:
+      tags:
+        - store
+      summary: Delete stores
+      description: Remove store by IDs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: integer
+                  example: [0, 1, 2, 3]
+                  description: The ID of the store to delete
+              required:
+                - ids
+
+      responses:
+        "204":
+          description: Store deleted successfully (no content)
+        "404":
+          description: Store not found
+        "500":
+          description: Server error
+
+  /stores/{store_id}:
+    get:
+      tags:
+        - store
+      summary: Get a store by ID
+      description: Retrieve details of a single store
+      parameters:
+        - name: store_id
+          in: path
+          required: true
+          description: ID of the store
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Store details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/Store"
+        "404":
+          description: Store not found
+        "500":
+          description: Server error
+
+    put:
+      tags:
+        - store
+      summary: Update a store
+      description: Update an existing store by ID
+      parameters:
+        - name: store_id
+          in: path
+          required: true
+          description: ID of the store
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Store"
+      responses:
+        "200":
+          description: Store updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: "#/components/schemas/Store"
+        "400":
+          description: Invalid request
+        "404":
+          description: Store not found
+        "500":
+          description: Server error
+
+  /operations:
+    delete:
+      tags:
+        - operations
+      summary: Delete store operation hour
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                store_id:
+                  type: integer
+                  description: The ID of the store to delete
+                day:
+                  type: integer
+                  enum: [0, 1, 2, 3, 4, 5, 6]
+                  description: The day to delete
+                id:
+                  type: integer
+                  description: The ID of the store operations to delete
+              required:
+                - store_id
+                - day
+      responses:
+        "204":
+          description: Store operations deleted successfully (no content)
+        "404":
+          description: Store operations not found
+        "500":
+          description: Server error
+
+  /operations/{store_id}:
+    get:
+      tags:
+        - operations
+      summary: Get store operation hours
+      description: Retrieve opening hours, breaks, and special days for a store
+      parameters:
+        - name: store_id
+          in: path
+          required: true
+          description: ID of the store
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Store operation hours
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOperationsResponse"
+        "404":
+          description: Store not found
+        "500":
+          description: Server error
+
+    put:
+      tags:
+        - operations
+      summary: Update store operation hours
+      description: Update opening hours, breaks, and special days for a store
+      parameters:
+        - name: store_id
+          in: path
+          required: true
+          description: ID of the store
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StoreOperations"
+      responses:
+        "200":
+          description: Store operations updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StoreOperationsResponse"
+        "400":
+          description: Invalid request
+        "404":
+          description: Store not found
+        "500":
+          description: Server error
+
+  /timeslots:
+    get:
+      tags:
+        - booking
+      summary: Get available timeslots for a store and service
+      description: Retrieve available timeslots for a specific store, service, and date.
+      parameters:
+        - name: store_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Store to get slots for
+        - name: service_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Service being booked (for duration & capacity)
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: Date for slots (YYYY-MM-DD)
+        - name: staff_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Optional staff ID if slots are staff-specific
+      responses:
+        "200":
+          description: List of available timeslots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeSlotsResponse"
+        "400":
+          description: Invalid request parameters
+        "404":
+          description: No slots found
+        "500":
+          description: Server error
+
+  /products-booking:
+    get:
+      tags:
+        - products-booking
+      summary: Get list of products booking
+      description: Retrieve all products booking.
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Page number for pagination
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Number of items per page
+      responses:
+        "200":
+          description: List of available products booking
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductsBookingResponse"
+        "400":
+          description: Invalid request parameters
+        "404":
+          description: No slots found
+        "500":
+          description: Server error
+
+    post:
+      tags:
+        - products-booking
+      summary: Create a new product booking
+      description: Create a new product booking with the specified service ID, capacity, and active status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                service_id:
+                  type: integer
+                  description: The ID of the service
+                capacity:
+                  type: integer
+                  description: The capacity of the product booking
+                active:
+                  type: boolean
+                  description: Whether the product booking is active
+              required:
+                - service_id
+                - active
+      responses:
+        "200":
+          description: Successful update
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      service_id:
+                        type: integer
+                        example: 60
+                      active:
+                        type: integer
+                        example: 1
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: "2025-11-28 14:06:09"
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: "2025-11-28 14:06:09"
+                      id:
+                        type: integer
+                        example: 6
+        "400":
+          description: Invalid request parameters
+        "404":
+          description: No slots found
+        "500":
+          description: Server error
+
+    put:
+      tags:
+        - products-booking
+      summary: Update products booking
+      description: Update products booking
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: capacity
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: active
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Successful update
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 6
+                      service_id:
+                        type: integer
+                        example: 60
+                      capacity:
+                        type: integer
+                        example: 10
+                      active:
+                        type: integer
+                        example: 1
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: "2025-11-28 14:06:09"
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: "2025-11-28 14:06:09"
+    delete:
+      tags:
+        - products-booking
+      summary: Delete products booking
+      description: Delete products booking by ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: The ID of the product booking to delete
+              required:
+                - id
+      "200":
+        description: Successful delete
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: success
+                data:
+                  type: string
+                  example: true
+
+components:
+  schemas:
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          description: Current page number
+        limit:
+          type: integer
+          description: Number of items per page
+        total_pages:
+          type: integer
+          description: Total number of pages
+        total_items:
+          type: integer
+          description: Total number of items
+      required:
+        - page
+        - limit
+        - total_pages
+        - total_items
+
+    BookingItem:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        name:
+          type: string
+        quantity:
+          type: integer
+        meta:
+          type: object
+          additionalProperties: true
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+        order_number:
+          type: string
+        slot_id:
+          type: integer
+        customer_id:
+          type: integer
+        customer_name:
+          type: string
+        status:
+          type: string
+          enum: [pending, processing, completed, cancelled]
+        date_created:
+          type: string
+          format: date-time
+        booking_date:
+          type: string
+          format: date-time
+        booking_start_time:
+          type: string
+          format: date-time
+        booking_end_time:
+          type: string
+          format: date-time
+        total:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/BookingItem"
+
+    Store:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        default_capacity:
+          type: integer
+          description: Default number of people allowed per booking
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    StoreResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Store"
+        pagination:
+          $ref: "#/components/schemas/Pagination"
+
+    Slots:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: time
+          description: Opening time (HH:MM)
+        end_time:
+          type: string
+          format: time
+          description: Closing time (HH:MM)
+
+    Day:
+      type: object
+      properties:
+        day:
+          type: string
+          description: Day of the week (Mon, Tue, …)
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/Slots"
+
+    SpecialDay:
+      type: object
+      properties:
+        lable:
+          type: string
+          description: Special day date
+        date:
+          type: string
+          format: date
+          description: Special day date
+        closed:
+          type: boolean
+          description: Whether the store is closed on this date
+        open_time:
+          type: string
+          format: time
+          description: Opening time if not closed
+        close_time:
+          type: string
+          format: time
+          description: Closing time if not closed
+
+    StoreOperations:
+      type: object
+      properties:
+        store_id:
+          type: integer
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/Day"
+        # special_days:
+        #   type: array
+        #   items:
+        #     $ref: "#/components/schemas/SpecialDay"
+
+    StoreOperationsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: "#/components/schemas/StoreOperations"
+
+    TimeSlot:
+      type: object
+      properties:
+        slot_id:
+          type: integer
+          description: Unique identifier for the slot
+        start_time:
+          type: string
+          format: time
+          description: Start time of the slot (HH:MM)
+        end_time:
+          type: string
+          format: time
+          description: End time of the slot (HH:MM)
+        capacity:
+          type: integer
+          description: Maximum number of bookings allowed for this slot
+        available:
+          type: integer
+          description: Number of available spots left in this slot
+
+    TimeSlotsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        store_id:
+          type: integer
+        service_id:
+          type: integer
+        date:
+          type: string
+          format: date
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/TimeSlot"
+
+    ProductsBookingResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+            - error
+        data:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  service:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      price:
+                        type: string
+                      description:
+                        type: string
+                      categories:
+                        type: array
+                        items:
+                          type: string
+                      featured_image:
+                        type: string
+                  capacity:
+                    type: string
+                  active:
+                    type: string
+            pagination:
+              $ref: "#/components/schemas/Pagination"
+
+    CustomerInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+
+    BookingInput:
+      type: object
+      required:
+        - store_id
+        - service_id
+        - date
+        - from_time
+        - to_time
+        - booking_slot
+        - customer_info
+      properties:
+        store_id:
+          type: integer
+        service_id:
+          type: integer
+        booking_date:
+          type: string
+          format: date
+        from_time:
+          type: string
+          format: time
+        to_time:
+          type: string
+          format: time
+        booking_slot:
+          type: integer
+        customer_info:
+          $ref: "#/components/schemas/CustomerInfo"
+        additional_meta:
+          type: object
+          additionalProperties: true
+
+    BookingCreatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            booking_id:
+              type: integer
+            store_id:
+              type: integer
+            service_id:
+              type: integer
+            date:
+              type: string
+              format: date
+            from_time:
+              type: string
+              format: time
+            to_time:
+              type: string
+              format: time
+            customer_info:
+              $ref: "#/components/schemas/CustomerInfo"
+            additional_meta:
+              type: object
+              additionalProperties: true
+            status:
+              type: string
+              enum: [pending, processing, confirmed, cancelled]
+            created_at:
+              type: string
+              format: date-time
+
+    BookingSummaryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            status:
+              type: boolean
+            total_bookings:
+              type: integer
+              description: Total number of bookings
+            completed_bookings:
+              type: integer
+              description: Number of completed bookings
+            pending_bookings:
+              type: integer
+              description: Number of pending bookings
+            cancelled_bookings:
+              type: integer
+              description: Number of cancelled bookings
+
+    BookingValidRequest:
+      type: object
+      properties:
+        store_id:
+          type: string
+          format: date
+          description: Booking date
+        date:
+          type: string
+          format: date
+          description: Booking date
+        start_time:
+          type: string
+          format: time
+          description: Start time of the slot (HH:MM)
+        end_time:
+          type: string
+          format: time
+          description: End time of the slot (HH:MM)
+        quantity:
+          type: integer
+          description: Quantity of booking
+
+    TimeSlotValid:
+      type: object
+      properties:
+        start_time:
+          type: string
+          format: time
+          description: Start time of the slot (HH:MM)
+        end_time:
+          type: string
+          format: time
+          description: End time of the slot (HH:MM)
+        capacity:
+          type: integer
+          description: Maximum number of bookings allowed for this slot
+        available:
+          type: integer
+          description: Number of available spots left in this slot
+    FE_Booking_Form:
+      type: string
+      description: shortcode [product_booking_form store_id="" product_id=""]
+
+

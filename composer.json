@@ -1,0 +1,8 @@
+{
+    "name": "zippy/credits",
+    "author": "zippy",
+    "vesion": "1.0",
+    "require": {
+        "guzzlehttp/guzzle": "^7.10"
+    }
+}

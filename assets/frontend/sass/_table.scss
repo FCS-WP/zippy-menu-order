@@ -1,0 +1,118 @@
+.tv-container {
+  overflow-x: auto;
+  background: #111111;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
+}
+
+.tv-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: auto;
+}
+
+.tv-thead {
+  background-color: #f9f9f9;
+}
+
+.tv-th {
+  padding: 16px;
+  text-align: left;
+  text-transform: capitalize;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  border: 0px !important;
+}
+
+.tv-checkbox-header,
+.tv-checkbox-cell {
+  padding: 12px 16px;
+  text-align: center;
+  border: 0px !important;
+}
+
+.tv-tr {
+  transition: background-color 0.2s;
+}
+
+.tv-even {
+  background-color: #ffffff;
+}
+
+.tv-odd {
+  background-color: #fefeff;
+}
+
+.tv-tr:hover {
+  background-color: #f1f1f1;
+}
+
+.tv-td {
+  padding: 16px;
+  border: 0px !important;
+}
+
+.tv-footer {
+  padding: 16px;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+}
+
+.tv-error {
+  color: #f87171;
+  font-weight: 600;
+}
+
+.perpage-container {
+  display: flex;
+  width: 300px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.perpage-label {
+  margin-bottom: 4px;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.perpage-select-wrapper {
+  position: relative;
+}
+
+.perpage-select {
+  width: 100%;
+  padding: 8px 32px 8px 12px;
+  font-size: 14px;
+  color: #334155;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: 0.3s ease;
+  appearance: none;
+}
+
+.perpage-select:hover {
+  border-color: #94a3b8;
+}
+
+.perpage-select:focus {
+  border-color: #94a3b8;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.08);
+  outline: none;
+}
+
+.perpage-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  color: #334155;
+  pointer-events: none;
+}

@@ -1,0 +1,90 @@
+.cs-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* BUTTON */
+.cs-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb; /* gray-200 */
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cs-button:hover {
+  background: #f9fafb;
+}
+
+.cs-button-label {
+  color: #475569; /* gray-700 */
+}
+
+/* ICON */
+.cs-icon {
+  transition: transform 0.2s ease;
+}
+
+.cs-icon-rotate {
+  transform: rotate(180deg);
+}
+
+/* DROPDOWN */
+.cs-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: white;
+  margin-top: 8px;
+  border-radius: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0px 3px 12px rgba(0, 0, 0, 0.1);
+  list-style: none;
+  padding: 0;
+}
+
+/* ITEM */
+.cs-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cs-item:hover {
+  background: #f1f5f9; /* gray-100 */
+}
+
+.cs-item-label {
+  color: #475569;
+}
+
+/* CHECKBOX ICON */
+.cs-check {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: transparent;
+}
+
+.cs-check-active {
+  background: #2563eb; /* primary */
+  border-color: #2563eb;
+  color: white;
+}
+
+.cs-check-icon {
+  font-size: 10px;
+}

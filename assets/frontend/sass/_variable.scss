@@ -1,0 +1,39 @@
+// Theme Colors
+@theme {
+  //Fonts
+  --font-primary: "Poppins", sans-serif;
+  --font-secondary: "Montserrat", sans-serif;
+  //Colors
+  --color-primary: #2fa64d;
+  --color-primary-50: #e6f5eb;
+  --color-primary-100: #c0e6c9;
+  --color-primary-200: #99d9a7;
+  --color-primary-300: #73cc85;
+  --color-primary-400: #4dbd63;
+  --color-primary-500: #2fa64d;
+  --color-secondary: #0f2b6e;
+  --color-secondary-50: #e6e9f4;
+  --color-secondary-100: #c0c8e3;
+  --color-secondary-200: #99a7d1;
+  --color-secondary-300: #7386c0;
+  --color-secondary-400: #4d65ae;
+  --color-secondary-500: #0f2b6e;
+
+  //Border
+  --border-primary: 1px solid var(--color-primary);
+  --border-secondary: 1px solid var(--color-secondary);
+  //Border-Radius
+  --radius-1: 8px;
+  --radius-2: 15px;
+  --radius-3: 30px;
+  //container
+  --container-lg: 1240px;
+}
+
+$color-primary: var(--e-global-color-primary);
+$color-secondary: var(--e-global-color-secondary);
+
+$font-primary: var(--e-global-font-primary);
+$font-secondary: var(--e-global-font-secondary);
+
+$text-primary: #212121;

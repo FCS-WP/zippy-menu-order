@@ -1,0 +1,33 @@
+.custom-date-picker {
+  display: flex;
+  flex-direction: column;
+
+  &__label {
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: #374151;
+  }
+
+  &__input {
+    width: 100%!important;
+    padding: 12px!important;
+    border-radius: 12px!important;
+    border: 1px solid #e5e7eb!important;
+    background-color: #ffffff!important;
+    outline: none!important;
+    font-size: 14px;
+    transition:
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+
+    &:hover,
+    &:focus {
+      background-color: #f9fafb;
+    }
+
+    &:disabled {
+      background-color: #f3f4f6;
+      cursor: not-allowed;
+    }
+  }
+}
