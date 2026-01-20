@@ -12,7 +12,7 @@ spl_autoload_register(function ($filename) {
 
 	$file_path = array_map('strtolower', $file_path);
 
-	if (isset($file_path[0]) && $file_path[0] !== 'ZIPPY_MENU_ORDER') {
+	if (isset($file_path[0]) && $file_path[0] !== 'zippy_menu_order') {
 		// we should not care about files outside our namespace
 		return;
 	}
