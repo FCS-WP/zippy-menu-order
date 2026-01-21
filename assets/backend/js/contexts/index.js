@@ -1,3 +1,4 @@
 import { createContext } from "react";
 
-// export const BookingListContext = createContext();
+export const DashboardContext = createContext();
+export const SettingsContext = createContext();

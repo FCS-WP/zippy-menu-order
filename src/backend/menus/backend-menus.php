@@ -23,14 +23,18 @@ class Backend_Menus
   private function __construct()
   {
     $this->init();
+    add_action('admin_menu', [$this, 'register_hidden_admin_pages']);
+
     add_action('admin_enqueue_scripts', [$this, 'build_admin_scripts_and_styles']);
   }
 
   function check_valid_screen()
   {
-    // Screens where scripts should NOT load
+    // Screens where scripts should NOT load (ex: page=menu-orders)
     $valid_screens = [
-      'credits',
+      'menu-orders-setttings',
+      'menu-orders',
+      'single-menu-settings',
     ];
     $current_page = isset($_GET['page']) ? sanitize_text_field($_GET['page']) : '';
     if (in_array($current_page, $valid_screens, true)) {
@@ -44,18 +48,18 @@ class Backend_Menus
   {
     $menus = [
       [
-        'page_title' => 'Credits',
-        'menu_title' => 'Credits',
-        'menu_slug'  => 'credits',
-        'callback'   => [$this, 'render_credits'],
+        'page_title' => 'Menu Orders',
+        'menu_title' => 'Menu Orders',
+        'menu_slug'  => 'menu-orders',
+        'callback'   => [$this, 'render_menu_orders'],
         'icon'       => 'dashicons-calendar-alt',
         'position'   => 6,
         'submenus'   => [
           [
-            'page_title' => 'Credit Settings',
-            'menu_title' => 'Credit Settings',
-            'menu_slug'  => 'credit_setttings',
-            'callback'   => [$this, 'render_credit_settings'],
+            'page_title' => 'Settings',
+            'menu_title' => 'Settings',
+            'menu_slug'  => 'menu-orders-setttings',
+            'callback'   => [$this, 'render_menu_orders_settings'],
           ],
         ]
       ]
@@ -63,16 +67,44 @@ class Backend_Menus
 
     new Views($menus);
   }
+  
+  function register_hidden_admin_pages()
+  {
+    $pages = [
+      [
+        'slug'     => 'single-menu-settings',
+        'title'    => 'Single Menu Settings',
+        'cap'      => 'manage_options',
+        'callback' => [$this, 'render_single_settings'],
+      ],
+    ];
+
+    foreach ($pages as $page) {
+      add_submenu_page(
+        null, // 🔥 hidden
+        $page['title'],
+        $page['title'],
+        $page['cap'],
+        $page['slug'],
+        $page['callback']
+      );
+    }
+  }
 
 
-  public function render_credits()
+  public function render_menu_orders()
   {
     echo '<div id="ZIPPY_MENU_ORDER"></div>';
   }
 
-  public function render_credit_settings()
+  public function render_menu_orders_settings()
   {
-    echo '<div id="credit_settings"></div>';
+    echo '<div id="menu_orders_settings"></div>';
+  }
+  
+  public function render_single_settings()
+  {
+    echo '<div id="single_menu_settings"></div>';
   }
 
   public function build_admin_scripts_and_styles()

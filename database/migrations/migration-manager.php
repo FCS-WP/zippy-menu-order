@@ -2,8 +2,9 @@
 
 namespace ZIPPY_MENU_ORDER\Database\Migrations;
 
-use ZIPPY_MENU_ORDER\Database\Migrations\Audit_Logs\Audit_Logs_Migration;
-use ZIPPY_MENU_ORDER\Database\Migrations\Example\Example_Migration;
+use ZIPPY_MENU_ORDER\Database\Migrations\Dishes\Dishes_Migration;
+use ZIPPY_MENU_ORDER\Database\Migrations\Menus\Dishes_Menu_Migration;
+use ZIPPY_MENU_ORDER\Database\Migrations\Menus\Menus_Migration;
 
 class Migration_Manager
 {
@@ -26,7 +27,11 @@ class Migration_Manager
 
     public static function migrations()
     {
-        return [];
+        return [
+            new Menus_Migration(),
+            new Dishes_Menu_Migration(),
+            new Dishes_Migration(),
+        ];
     }
 
     public static function run()

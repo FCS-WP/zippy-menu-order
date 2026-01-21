@@ -45,13 +45,9 @@ class Backend_Setting
     public function remove_default_stylesheets($handle)
     {
         $apply_urls = [
-            'toplevel_page_bookings',
-            'bookings_page_bookings_reports',
-            'bookings_page_bookings_settings',
-            'bookings_page_bookings_list',
-            'bookings_page_bookings_calendar',
-            'admin_page_bookings_calendar',
-            'bookings_page_bookings_products_booking_settings',
+            'toplevel_page_menu-orders',
+            'menu-orders_page_menu-orders-setttings',
+            'admin_page_single-menu-settings',
         ];
 
         if (in_array($handle, $apply_urls)) {
