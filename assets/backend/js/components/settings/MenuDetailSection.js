@@ -1,14 +1,26 @@
 import React from "react";
 import Switch from "../common/Switch";
 import Button from "../common/button/Button";
+import { MenuApi } from "../../api";
 
 export default function MenuDetailSection({ value, onChange }) {
   const updateField = (key, val) => {
     onChange({ ...value, [key]: val });
   };
 
-  const handleSaveDetail = () => {
-    console.log("Update new data: ", value);
+  const handleSaveDetail = async () => {
+    const params = {
+      name: value['name'],
+      description: value['description'],
+      min_pax: value['min_pax'] ?? 1,
+      max_pax: value['max_pax'] ?? null,
+      is_active: value['is_active'] ? 1 : 0,
+      price: parseFloat(value['price']),
+      dishes_qty: parseInt(value['dishes_qty']),
+    }
+
+    const res = await MenuApi.createMenu(params);
+    console.log(res);
   }
 
   return (
@@ -66,10 +78,10 @@ export default function MenuDetailSection({ value, onChange }) {
           <input
             type="number"
             min={0}
-            step="0.01"
-            value={value.price_per_pax}
+            step="1"
+            value={value.price}
             onChange={(e) =>
-              updateField("price_per_pax", Number(e.target.value))
+              updateField("price", Number(e.target.value))
             }
             className="w-full rounded-md border px-3 py-2 text-sm"
           />
@@ -83,9 +95,9 @@ export default function MenuDetailSection({ value, onChange }) {
           <input
             type="number"
             min={1}
-            value={value.dishes_quantity}
+            value={value.dishes_qty}
             onChange={(e) =>
-              updateField("dishes_quantity", Number(e.target.value))
+              updateField("dishes_qty", Number(e.target.value))
             }
             className="w-full rounded-md border px-3 py-2 text-sm"
           />

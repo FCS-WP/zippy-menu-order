@@ -37,14 +37,25 @@ class Menu_Controllers extends Base_Controller
 	{
 		// Data is already validated
 		$validated = $request->all();
+        $data = Menu_Services::create_menu($validated);
 
-		// $id = $request->get_param('price');
-		return new WP_REST_Response(['single_product' => $validated], 200);
+        if (is_wp_error($data)) {
+            return $this->error($data->get_error_message());
+        }
+
+		return new WP_REST_Response(['Created Successfully' => $validated], 200);
 	}
 
 	public function update(Menu_Request $request)
 	{
 		$validated = $request->all();
+
+ 		// $updated_booking = Menu_Services::update_menu($validated);
+
+        // if (is_wp_error($updated_booking)) {
+        //     return $this->error($updated_booking->get_error_message());
+        // }
+
 		return new WP_REST_Response(['updated' => $validated], 200);
 	}
 
