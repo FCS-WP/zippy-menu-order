@@ -6,7 +6,7 @@ export const makeRequest = async (
   method = "GET", // Default method set to GET
   token = "FEhI30q7ySHtMfzvSDo6RkxZUDVaQ1BBU3lBcGhYS3BrQStIUT09",
 ) => {
-  const baseURL = "/wp-json/booking/v1/";
+  const baseURL = "/wp-json/menu-order/v1/";
   const api = axios.create({
     baseURL: baseURL,
     withCredentials: true,
@@ -16,7 +16,7 @@ export const makeRequest = async (
   const headers = token
     ? {
         Authorization: `Bearer ${token}`,
-        "X-WP-Nonce": core_admin_api.nonce,
+        "X-WP-Nonce": zippy_menu_order_api.nonce,
       }
     : {};
 
