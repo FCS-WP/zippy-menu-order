@@ -1,24 +1,19 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DishesBox from "./DishesBox";
 import Button from "../common/button/Button";
 import { URL_MENU_SETTINGS } from "../../helpers/constants";
 import MenuDetailSection from "./MenuDetailSection";
 import MenuBoxes from "./MenuBoxes";
+import { useFetchMenu } from "../../hooks/useFetchMenus";
 
 export default function MenuSetting() {
   const urlParams = new URLSearchParams(window.location.search);
-  const menu_id = urlParams.get("menu_id") ?? null;
-  const [menuDetail, setMenuDetail] = useState({
-    id: 1001,
-    name: "Menu - 1123321",
-    is_active: true,
-    min_pax: 1,
-    max_pax: 10,
-    price_per_pax: 25,
-    dishes_quantity: 5,
-  });
+  const menuId = urlParams.get("menu_id") ?? null;
+  const pageType = menuId == 0 ? 'new' : 'existed';
+  const { currentMenu, fetchMenuDetail } = useFetchMenu();
+  const [menuDetail, setMenuDetail] = useState(currentMenu ?? {});
 
-  if (!menu_id) {
+  if (!menuId) {
     window.alert("Invalid Menu");
     window.location.href = URL_MENU_SETTINGS;
     return;
@@ -106,6 +101,12 @@ export default function MenuSetting() {
   const handleSaveChanges = () => {
     console.log(mainMenu);
   };
+
+  useEffect(()=>{
+    if (menuId) {
+      fetchMenuDetail(menuId);
+    }
+  }, [])
 
   return (
     <div className="w-[96%] m-auto">

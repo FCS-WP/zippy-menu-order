@@ -5,7 +5,7 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useSettingsProvider } from "../../providers/SettingsProvider";
 import Switch from "../common/Switch";
-import { URL_SINGLE_MENU } from "../../helpers/constants";
+import { URL_MENU_SETTINGS, URL_SINGLE_MENU } from "../../helpers/constants";
 
 const dataMenus = [
   {
@@ -157,8 +157,15 @@ const MenuList = () => {
     setTableConfigs(newData);
   };
 
+  const redirectToAddNew = () =>{
+    window.location.href = URL_SINGLE_MENU + '&menu_id=0';
+  }
+
   return (
-    <div>
+    <div className="w-full mx-auto p-6 bg-white">
+      <div className="mb-6 flex justify-end">
+        <Button onClick={redirectToAddNew}> + Add new menu</Button>
+      </div>
       <TableView
         tableConfig={tableConfigs}
         dataRows={dataRows}

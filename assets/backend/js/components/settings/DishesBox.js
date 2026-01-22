@@ -1,16 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import Switch from "../common/Switch";
-
-const ALL_DISHES = [
-  { id: "d1", name: "Fried Rice" },
-  { id: "d2", name: "Grilled Chicken" },
-  { id: "d3", name: "Beef Noodles" },
-  { id: "d4", name: "Spring Rolls" },
-  { id: "d5", name: "Seafood Soup" },
-];
+import { ProductApi } from "../../api";
+import { debounce } from "../../helpers/debounce";
+import { toast } from "react-toastify";
 
 const DishesBox = ({ box, updateBoxName, addDishToBox }) => {
   const [search, setSearch] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -25,9 +21,44 @@ const DishesBox = ({ box, updateBoxName, addDishToBox }) => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const results = ALL_DISHES.filter((dish) =>
-    dish.name.toLowerCase().includes(search.toLowerCase()),
+  const handleSearch = async (keyword) => {
+    // query here
+    const res = await ProductApi.searchProductsByName({
+      q: keyword,
+    });
+
+    if (res.status == "success") {
+      return res.data;
+    }
+
+    return null;
+  };
+
+  const debounceSearchServices = useCallback(
+    debounce(async (keyword) => {
+      if (keyword.trim()) {
+        const results = await handleSearch(keyword);
+        if (results) {
+          setSearchResults(results);
+          if (results.length == 0) {
+            setSearchMessage(`Not found product name "${keyword}"`);
+          } else {
+            setSearchMessage(``);
+          }
+        } else {
+          toast.error("Search error");
+          setSearchResults([]);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 500),
+    [],
   );
+
+  useEffect(() => {
+    debounceSearchServices(search);
+  }, [search]);
 
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
@@ -39,7 +70,9 @@ const DishesBox = ({ box, updateBoxName, addDishToBox }) => {
         //   updateBoxName(box.id, e.target.value)
         // }
       />
-      <h2 className="!text-3xl !mt-0 !mb-4 font-bold !text-primary">{box.name}</h2>
+      <h2 className="!text-3xl !mt-0 !mb-4 font-bold !text-primary">
+        {box.name}
+      </h2>
 
       <div className="pb-6 mb-6 border-b border-gray-200 grid md:grid-cols-2 gap-4 items-center">
         {/* Box name */}
@@ -100,8 +133,8 @@ const DishesBox = ({ box, updateBoxName, addDishToBox }) => {
         {/* Dropdown */}
         {open && search && (
           <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow-lg">
-            {results.length > 0 ? (
-              results.map((dish) => {
+            {searchResults.length > 0 ? (
+              searchResults.map((dish) => {
                 const exists = box.dishes.some((d) => d.id === dish.id);
 
                 return (
