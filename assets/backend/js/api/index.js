@@ -13,4 +13,7 @@ export const MenuApi = {
    async getMenus(params) {
     return await makeRequest("/menus", params);
   },
+  async createMenu(params) {
+    return await makeRequest("/menus", params, 'POST');
+  },
 };

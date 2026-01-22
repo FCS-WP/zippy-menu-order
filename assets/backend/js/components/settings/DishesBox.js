@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 const DishesBox = ({ box, updateBoxName, addDishToBox }) => {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [searchMessage, setSearchMessage] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
