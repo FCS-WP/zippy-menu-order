@@ -39,68 +39,72 @@ class Menu_Services
         // return $products;
     }
 
-    public static function get_menu_detail()
+    public static function get_menu_detail($id)
     {
-       
+        try {
+            $menu = Menu_Model::find_by_id($id)?->toArray();
+
+            if (empty($menu)) {
+                return new \WP_Error('menu_not_found', 'Menu not found!');
+            }
+
+            return $menu;
+        } catch (\Exception $e) {
+            return new \WP_Error('server_error', $e->getMessage());
+        }
     }
 
-    // public static function update_menu($infos)
-    // {
-    //     try {
-    //         $menu_id = $infos['menu_id'];
-    //         $name = $infos['name'];
-    //         $description = $infos['description'];
-    //         $min_pax = $infos['min_pax'] ?? 0;
-    //         $max_pax = $infos['max_pax'] ?? null;
-    //         $name = $infos['name'];
-    //         $price = $infos['price'];
-    //         $dishes_qty = $infos['dishes_qty'];
-    //         $is_active = $infos['is_active'] ?? null;
+    /**
+     * Update menu
+     * @param mixed $infos
+     * @return array|\WP_Error
+     */
 
-    //         global $wpdb;
-    //         $wpdb->query('START TRANSACTION');
-    //         $menu = Booking_Model::find_by_id($booking_id);
-    //         if (empty($booking)) {
-    //             $wpdb->query('ROLLBACK');
-    //             return new \WP_Error('booking_not_found', message('booking')['booking_not_found']);
-    //         }
+    public static function update_menu($infos)
+    {
+        try {
+            $menu_id = $infos['id'];
+            $name = $infos['name'];
+            $description = $infos['description'];
+            $min_pax = $infos['min_pax'] ?? 0;
+            $max_pax = $infos['max_pax'] ?? null;
+            $name = $infos['name'];
+            $price = $infos['price'];
+            $dishes_qty = $infos['dishes_qty'];
+            $is_active = $infos['is_active'] ?? null;
 
-    //         if (!Timeslots_Services::can_book_slot($date, $store_id, $booking->service_id, $start_time, $end_time, $booking->booked, $slot)) {
-    //             $wpdb->query('ROLLBACK');
-    //             return new \WP_Error('not_available', message('booking')['not_enough_slots']);
-    //         }
+            global $wpdb;
+            $wpdb->query('START TRANSACTION');
+            $menu = Menu_Model::find_by_id($menu_id);
+    
+            if (empty($menu)) {
+                $wpdb->query('ROLLBACK');
+                return new \WP_Error('menu_not_found', 'Menu not found!');
+            }
 
-    //         $new_booking_slot = self::getBookingSlot($store_id, $date, $start_time, $end_time);
-    //         if (empty($new_booking_slot)) {
-    //             $wpdb->query('ROLLBACK');
-    //             return new \WP_Error('slot_not_found', message('booking')['slot_not_found']);
-    //         }
+            $menuUpdated = $menu->update([
+                'name' => $name,
+                'description' => $description,
+                'min_pax'  => $min_pax,
+                'max_pax'  => $max_pax,
+                'price'  => $price,
+                'dishes_qty'  => $dishes_qty,
+                'is_active' => $is_active,
+            ]);
 
-    //         $booking->update([
-    //             'slot_id' => $new_booking_slot->id,
-    //             'booked'  => $slot,
-    //         ]);
+            if (empty($menuUpdated)) {
+                $wpdb->query('ROLLBACK');
+                return new \WP_Error('menu_error', 'failed to update menu');
+            }
+            $wpdb->query('COMMIT');
+            return $menuUpdated?->toArray();
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return new \WP_Error('server_error', $e->getMessage());
+        }
+    }
 
-    //         //2. Update new slot
-    //         // $updateSlot = self::updateSlotAvailability($new_booking_slot, $slot);
-    //         // if (!$updateSlot) {
-    //         //     $wpdb->query('ROLLBACK');
-    //         //     return new \WP_Error('not_enough_slots', message('booking')['not_enough_slots']);
-    //         // }
-
-    //         //3. Update order info
-    //         Booking_Services::update_order_info($customer, $status, $booking, $slot);
-
-    //         $wpdb->query('COMMIT');
-
-    //         return true;
-    //     } catch (\Exception $e) {
-    //         $wpdb->query('ROLLBACK');
-    //         return new \WP_Error('server_error', $e->getMessage());
-    //     }
-    // }
-
-       /**
+    /**
      * Create booking
      * @param mixed $infos
      * @return array|\WP_Error
@@ -133,7 +137,7 @@ class Menu_Services
             ]);
             if (empty($menuCreated)) {
                 $wpdb->query('ROLLBACK');
-                return new \WP_Error('booking_error', 'failed to create menu');
+                return new \WP_Error('menu_error', 'failed to create menu');
             }
             $wpdb->query('COMMIT');
             return $menuCreated;

@@ -15,7 +15,6 @@ class Menu_Request extends Base_Request
             'name' => ['type' => 'string', 'required' => true],
             'description' => ['type' => 'string', 'required' => false],
             'min_pax' => ['type' => 'int', 'required' => true],
-            'max_pax' => ['type' => 'int', 'required' => false],
             'price' => ['type' => 'float', 'required' => true],
             'dishes_qty' => ['type' => 'int', 'required' => true],
             'is_active' => ['type' => 'boolean', 'required' => true],
@@ -29,9 +28,7 @@ class Menu_Request extends Base_Request
 
     public function show_validate()
     {
-        return [
-            'name' => ['type' => 'string', 'required' => true],
-        ];
+        return [];
     }
 
     public function get_products_by_name_validate()

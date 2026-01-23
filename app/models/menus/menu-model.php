@@ -13,6 +13,7 @@ class Menu_Model extends Base_Model
         'name',
         'description',
         'min_pax',
+        'max_pax',
         'price',
         'dishes_qty',
         'is_active',

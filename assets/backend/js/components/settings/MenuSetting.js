@@ -9,15 +9,9 @@ import { useFetchMenu } from "../../hooks/useFetchMenus";
 export default function MenuSetting() {
   const urlParams = new URLSearchParams(window.location.search);
   const menuId = urlParams.get("menu_id") ?? null;
-  const pageType = menuId == 0 ? 'new' : 'existed';
-  const { currentMenu, fetchMenuDetail } = useFetchMenu();
-  const [menuDetail, setMenuDetail] = useState(currentMenu ?? {});
-
-  if (!menuId) {
-    window.alert("Invalid Menu");
-    window.location.href = URL_MENU_SETTINGS;
-    return;
-  }
+  const pageType = menuId == 0 ? "new" : "existed";
+  const { currentMenu, fetchMenuDetail, error } = useFetchMenu();
+  const [menuDetail, setMenuDetail] = useState(currentMenu ?? null);
 
   const [mainMenu, setMainMenu] = useState([
     {
@@ -68,6 +62,14 @@ export default function MenuSetting() {
     },
   ]);
 
+  const checkingMenu = () => {
+    if (error || (pageType == "existed" && !menuDetail)) {
+      window.location.href = URL_MENU_SETTINGS;
+      window.alert("Invalid Menu");
+      return;
+    }
+  };
+
   // Add new box
   const addBox = () => {
     setBoxes((prev) => [
@@ -102,17 +104,33 @@ export default function MenuSetting() {
     console.log(mainMenu);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
+    const getDetail = async () => {
+      await fetchMenuDetail(menuId);
+      checkingMenu();
+    };
+
     if (menuId) {
-      fetchMenuDetail(menuId);
+      getDetail();
     }
-  }, [])
+  }, [menuId]);
+
+  useEffect(() => {
+    checkingMenu();
+  }, [error]);
+
+  useEffect(() => {
+    setMenuDetail(currentMenu);
+    console.log(currentMenu);
+  }, [currentMenu]);
 
   return (
     <div className="w-[96%] m-auto">
       <div>
         <div className="mb-8">
-          <h2 className="!text-3xl font-bold mb-4">Detail Menu - 1123321</h2>
+          <h2 className="!text-3xl font-bold mb-4">
+            {pageType == "new" ? "New Menu" : `Detail - ${menuDetail?.name}`}
+          </h2>
           <MenuDetailSection value={menuDetail} onChange={setMenuDetail} />
         </div>
         <MenuBoxes data={mainMenu} title={"Main Menu"} />

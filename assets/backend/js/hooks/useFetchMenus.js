@@ -8,7 +8,7 @@ export const useFetchMenu = () => {
   const [totalRows, setTotalRows] = useState(0);
   const [error, setError] = useState(null);
 
-  const fetchMenuDetail = useCallback(async ({ id } = {}) => {
+  const fetchMenuDetail = useCallback(async (id) => {
     try {
       setLoading(true);
       setError(null);
@@ -16,7 +16,13 @@ export const useFetchMenu = () => {
 
       if (data?.status === "success") {
         setCurrentMenu(data.data || {});
+      }  
+
+      if (data?.status === "error") {
+        setError(data?.message ?? 'fetch error');
       }
+
+
     } catch (err) {
       console.error("Error fetching menu:", err);
       setError(err);
