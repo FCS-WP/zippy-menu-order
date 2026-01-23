@@ -5,6 +5,9 @@ namespace ZIPPY_MENU_ORDER\Database\Migrations;
 use ZIPPY_MENU_ORDER\Database\Migrations\Dishes\Dishes_Migration;
 use ZIPPY_MENU_ORDER\Database\Migrations\Menus\Dishes_Menu_Migration;
 use ZIPPY_MENU_ORDER\Database\Migrations\Menus\Menus_Migration;
+use ZIPPY_MENU_ORDER\Database\Migrations\Special_Days\Special_Days_Migration;
+use ZIPPY_MENU_ORDER\Database\Migrations\Stores\Store_Migration;
+use ZIPPY_MENU_ORDER\Database\Migrations\Stores\Store_Operation_Migration;
 
 class Migration_Manager
 {
@@ -31,6 +34,9 @@ class Migration_Manager
             new Menus_Migration(),
             new Dishes_Menu_Migration(),
             new Dishes_Migration(),
+            new Store_Migration(),
+            new Store_Operation_Migration(),
+            new Special_Days_Migration(),
         ];
     }
 

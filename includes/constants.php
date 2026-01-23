@@ -27,3 +27,15 @@ if (!defined('DISHES_MENU_TABLE')) {
 if (!defined('DISHES_TABLE')) {
   define('DISHES_TABLE', 'dishes');
 }
+
+if (!defined('STORES_TABLE')) {
+  define('STORES_TABLE', 'stores');
+}
+
+if (!defined('STORES_OPERATION_TABLE')) {
+  define('STORES_OPERATION_TABLE', 'store_operations');
+}
+
+if (!defined('SPECIAL_DAYS_TABLE')) {
+  define('SPECIAL_DAYS_TABLE', 'special_days');
+}
