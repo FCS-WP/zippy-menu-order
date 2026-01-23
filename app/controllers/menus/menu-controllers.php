@@ -13,45 +13,80 @@ class Menu_Controllers extends Base_Controller
 
 	public function index(Menu_Request $request)
 	{
- 		$infos = Request_Helper::get_params($request);
-        $result = Menu_Services::get_menus($infos);
-        return $this->success($result);
+		$validated = $request->all();
+		$result = Menu_Services::get_menus($validated);
+		return $this->success($result, 200);
 	}
 
 	public function show(Menu_Request $request)
 	{
 		try {
-            $id = $request->get_param('id');
-            $result = Menu_Services::get_menu_detail($id);
-            if (is_wp_error($result)) {
-                return $this->error($result->get_error_message());
-            }
+			$validated = $request->all();
+			$result = Menu_Services::get_menu_detail($validated['id']);
+			if (is_wp_error($result)) {
+				return $this->error($result->get_error_message());
+			}
 
-            return $this->success($result, 200);
-        } catch (\Exception $e) {
-            return $this->error($e->getMessage());
-        }
+			return $this->success($result, 200);
+		} catch (\Exception $e) {
+			return $this->error($e->getMessage());
+		}
 	}
 
 	public function store(Menu_Request $request)
 	{
 		// Data is already validated
-		$validated = $request->all();
+		try {
+			$validated = $request->all();
+			$data = Menu_Services::create_menu($validated);
 
-		// $id = $request->get_param('price');
-		return new WP_REST_Response(['single_product' => $validated], 200);
+			if (is_wp_error($data)) {
+				return $this->error($data->get_error_message());
+			}
+
+			return $this->success($data, 200);
+		} catch (\Exception $e) {
+			return $this->error($e->getMessage());
+		}
 	}
 
 	public function update(Menu_Request $request)
 	{
-		$validated = $request->all();
-		return new WP_REST_Response(['updated' => $validated], 200);
+		try {
+			$validated = $request->all();
+			$updated_booking = Menu_Services::update_menu($validated);
+
+			if (is_wp_error($updated_booking)) {
+				return $this->error($updated_booking->get_error_message());
+			}
+
+			return $this->success($updated_booking, 200);
+		} catch (\Exception $e) {
+			return $this->error($e->getMessage());
+		}
 	}
 
 	public function destroy(Menu_Request $request)
 	{
-		$validated = $request->all();
-		$id = $validated['id'] ?? null;
-		return new WP_REST_Response(['deleted' => $id], 200);
+		try {
+			$validated = $request->all();
+			$id = $validated['id'] ?? null;
+			$deleted = Menu_Services::delete_menu($id);
+			return $this->success($deleted, 200);
+		} catch (\Exception $e) {
+			return $this->error($e->getMessage());
+		}
+	}
+
+	public function toggle_status(Menu_Request $request) 
+	{
+		try {
+			$validated = $request->all();
+			$id = $validated['id'] ?? null;
+			$updated = Menu_Services::update_menu_status($id);
+			return $this->success($updated, 200);
+		} catch (\Exception $e) {
+			return $this->error($e->getMessage());
+		}
 	}
 }

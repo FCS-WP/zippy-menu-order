@@ -4,11 +4,13 @@ import { BookingApi, MenuApi } from "../api";
 export const useFetchMenu = () => {
   const [menus, setMenus] = useState([]);
   const [currentMenu, setCurrentMenu] = useState();
+  const [dataPagination, setDataPagination] = useState({});
   const [loading, setLoading] = useState(false);
   const [totalRows, setTotalRows] = useState(0);
+  const [isFetched, setIsFetched] = useState(false);
   const [error, setError] = useState(null);
 
-  const fetchMenuDetail = useCallback(async ({ id } = {}) => {
+  const fetchMenuDetail = useCallback(async (id) => {
     try {
       setLoading(true);
       setError(null);
@@ -17,6 +19,12 @@ export const useFetchMenu = () => {
       if (data?.status === "success") {
         setCurrentMenu(data.data || {});
       }
+
+      if (data?.status === "error") {
+        setError(data?.message ?? "fetch error");
+      }
+      setIsFetched(true);
+
     } catch (err) {
       console.error("Error fetching menu:", err);
       setError(err);
@@ -25,40 +33,34 @@ export const useFetchMenu = () => {
     }
   }, []);
 
-  const fetchMenus = useCallback(
-    async ({ filters = {}, page = null, perPage = null } = {}) => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchMenus = useCallback(async (tableConfig) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await MenuApi.getMenus(tableConfig);
 
-        const params = {
-          ...filters,
-          page,
-          per_page: perPage,
-        };
-
-        const data = await MenuApi.getMenus(params);
-
-        if (data?.status === "success") {
-          setMenus(data.data.menus || []);
-          setTotalRows(data.data.total || 0);
-        }
-      } catch (err) {
-        console.error("Error fetching menus:", err);
-        setError(err);
-      } finally {
-        setLoading(false);
+      if (data?.status === "success") {
+        console.log(data.data.data);
+        setMenus(data.data.data || []);
+        setDataPagination(data.data.pagination || 0);
       }
-    },
-    [],
-  );
+    } catch (err) {
+      console.error("Error fetching menus:", err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return {
     currentMenu,
     menus,
+    dataPagination,
     totalRows,
+    isFetched,
     loading,
     error,
     fetchMenuDetail,
+    fetchMenus,
   };
 };

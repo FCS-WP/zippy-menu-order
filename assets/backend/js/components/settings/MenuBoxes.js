@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import DishesBox from "./DishesBox";
 
-const MenuBoxes = ({ data, title }) => {
+const MenuBoxes = ({ data, title, onClickRemoveBox }) => {
   const [boxes, setBoxes] = useState(data);
   // Add new box
   const addBox = () => {
@@ -42,7 +42,7 @@ const MenuBoxes = ({ data, title }) => {
             <DishesBox
               key={box.id}
               box={box}
-              updateBoxName={updateBoxName}
+              onClickRemoveBox={onClickRemoveBox}
               addDishToBox={addDishToBox}
             />
           ))}

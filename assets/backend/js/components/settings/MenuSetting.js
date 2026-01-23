@@ -5,20 +5,18 @@ import { URL_MENU_SETTINGS } from "../../helpers/constants";
 import MenuDetailSection from "./MenuDetailSection";
 import MenuBoxes from "./MenuBoxes";
 import { useFetchMenu } from "../../hooks/useFetchMenus";
+import { toast } from "react-toastify";
+import { MenuApi } from "../../api";
+import ConfirmPopup from "../common/popup/ConfirmPopup";
 
 export default function MenuSetting() {
   const urlParams = new URLSearchParams(window.location.search);
+  const [isOpenPopupConfirm, setIsOpenPopupConfirm] = useState(false);
   const menuId = urlParams.get("menu_id") ?? null;
-  const pageType = menuId == 0 ? 'new' : 'existed';
-  const { currentMenu, fetchMenuDetail } = useFetchMenu();
-  const [menuDetail, setMenuDetail] = useState(currentMenu ?? {});
-
-  if (!menuId) {
-    window.alert("Invalid Menu");
-    window.location.href = URL_MENU_SETTINGS;
-    return;
-  }
-
+  const pageType = menuId == 0 ? "new" : "existed";
+  const { currentMenu, fetchMenuDetail, isFetched } = useFetchMenu();
+  const [menuDetail, setMenuDetail] = useState();
+  const [selectedBox, setSelectedBox] = useState();
   const [mainMenu, setMainMenu] = useState([
     {
       id: "2845e08d-045b-4722-a797-df23dbb9f0f9",
@@ -68,6 +66,14 @@ export default function MenuSetting() {
     },
   ]);
 
+  const checkingMenu = () => {
+    if (!currentMenu) {
+      window.location.href = URL_MENU_SETTINGS;
+      window.alert("Invalid Menu");
+      return;
+    }
+  };
+
   // Add new box
   const addBox = () => {
     setBoxes((prev) => [
@@ -102,24 +108,61 @@ export default function MenuSetting() {
     console.log(mainMenu);
   };
 
-  useEffect(()=>{
+  useEffect(() => {
+    if (pageType === "new") return;
+    const getDetail = async () => {
+      await fetchMenuDetail(menuId);
+    };
+
     if (menuId) {
-      fetchMenuDetail(menuId);
+      getDetail();
     }
-  }, [])
+  }, [menuId]);
+
+  useEffect(() => {
+    if (isFetched) {
+      checkingMenu();
+    }
+  }, [isFetched]);
+
+  useEffect(() => {
+    setMenuDetail(currentMenu);
+  }, [currentMenu]);
+
+  const handleDeleteBox = async (id) => {
+    // const res = await MenuApi.deleteMenu({
+    //   id: id,
+    // });
+    // if (!res || res.status !== "success") {
+    //   toast.error("Failed to delete menu!");
+    //   return;
+    // }
+    // toast.success("Box has been deleted!");
+    // setIsOpenPopupConfirm(false);
+    // return;
+    console.log("Delete Box", id);
+    setIsOpenPopupConfirm(false);
+  };
+
+  const onClickRemoveBox = (item) => {
+    setSelectedBox(item);
+    setIsOpenPopupConfirm(true);
+  }
 
   return (
     <div className="w-[96%] m-auto">
       <div>
         <div className="mb-8">
-          <h2 className="!text-3xl font-bold mb-4">Detail Menu - 1123321</h2>
+          <h2 className="!text-3xl font-bold mb-4">
+            {pageType == "new" ? "New Menu" : `Detail - ${menuDetail?.name}`}
+          </h2>
           <MenuDetailSection value={menuDetail} onChange={setMenuDetail} />
         </div>
-        <MenuBoxes data={mainMenu} title={"Main Menu"} />
+        <MenuBoxes data={mainMenu} title={"Main Menu"} onClickRemoveBox={onClickRemoveBox} />
       </div>
       {/* Addons */}
       <div>
-        <MenuBoxes data={mainMenu} title={"Addons Menu"} />
+        <MenuBoxes data={mainMenu} title={"Addons Menu"} onClickRemoveBox={onClickRemoveBox} />
       </div>
       <Button
         onClick={handleSaveChanges}
@@ -127,6 +170,14 @@ export default function MenuSetting() {
       >
         Save Changes
       </Button>
+
+      <ConfirmPopup
+        isOpen={isOpenPopupConfirm}
+        title="Delete menu?"
+        message="Confirm to delete this menu?"
+        onConfirm={() => handleDeleteBox(selectedBox.id)}
+        onClose={() => setIsOpenPopupConfirm(false)}
+      />
     </div>
   );
 }

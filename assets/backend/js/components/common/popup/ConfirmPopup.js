@@ -1,6 +1,6 @@
 import React from "react";
 import Popup from "../popup/Popup";
-import Button from "../common/button/Button";
+import Button from "../button/Button";
 
 const ConfirmPopup = ({
   isOpen,
@@ -24,7 +24,11 @@ const ConfirmPopup = ({
       <Popup.Header>{title}</Popup.Header>
 
       <Popup.Body>
-        {children ? children : <p dangerouslySetInnerHTML={{ __html: message }} />}
+        {children ? (
+          children
+        ) : (
+          <p dangerouslySetInnerHTML={{ __html: message }} />
+        )}
       </Popup.Body>
 
       <Popup.Footer>
