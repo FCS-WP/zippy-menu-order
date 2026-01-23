@@ -16,6 +16,9 @@ class Cart_Handler
         if (!WC()->cart) {
             wc_load_cart();
         }
+
+        add_filter('woocommerce_add_cart_item_data', [$this, 'add_cart_item_data'], 10, 2);
+        add_action('woocommerce_before_calculate_totals', [$this, 'apply_extra_price_to_cart'], 10, 1);
     }
 
     /**
@@ -77,6 +80,35 @@ class Cart_Handler
     public function clear_cart()
     {
         WC()->cart->empty_cart();
+    }
+
+    /**
+     * Store custom data with cart item
+     */
+    public function add_cart_item_data($cart_item_data, $product_id)
+    {
+        return $cart_item_data;
+    }
+
+    /**
+     * Apply extra price to cart items before calculating totals
+     */
+    public function apply_extra_price_to_cart()
+    {
+        foreach ($this->get_cart_items() as $cart_item_key => $cart_item) {
+            // Check if extra_price is set in custom data
+            if (isset($cart_item['extra_price']) && !empty($cart_item['extra_price'])) {
+                $extra_price = floatval($cart_item['extra_price']);
+                $product = $cart_item['data'];
+
+                // Get original price and add extra price
+                $original_price = floatval($product->get_regular_price());
+                $new_price = $original_price + $extra_price;
+
+                // Set new price
+                $product->set_price($new_price);
+            }
+        }
     }
 
     /**
