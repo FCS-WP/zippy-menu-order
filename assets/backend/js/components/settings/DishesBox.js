@@ -3,8 +3,11 @@ import Switch from "../common/Switch";
 import { ProductApi } from "../../api";
 import { debounce } from "../../helpers/debounce";
 import { toast } from "react-toastify";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Button from "../common/button/Button";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
-const DishesBox = ({ box, updateBoxName, addDishToBox }) => {
+const DishesBox = ({ box, updateBoxName, addDishToBox, onClickRemoveBox }) => {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchMessage, setSearchMessage] = useState("");
@@ -57,6 +60,8 @@ const DishesBox = ({ box, updateBoxName, addDishToBox }) => {
     [],
   );
 
+  const handleClickRemove = async () => {};
+
   useEffect(() => {
     debounceSearchServices(search);
   }, [search]);
@@ -71,9 +76,17 @@ const DishesBox = ({ box, updateBoxName, addDishToBox }) => {
         //   updateBoxName(box.id, e.target.value)
         // }
       />
-      <h2 className="!text-3xl !mt-0 !mb-4 font-bold !text-primary">
-        {box.name}
-      </h2>
+      <div className="flex justify-between">
+        <h2 className="!text-3xl !mt-0 !mb-4 font-bold !text-primary">
+          {box.name}
+        </h2>
+        <Button
+          className="bg-white border-0 py-0"
+          onClick={() => onClickRemoveBox(box)}
+        >
+          <FontAwesomeIcon icon={faTrash} color="red" />
+        </Button>
+      </div>
 
       <div className="pb-6 mb-6 border-b border-gray-200 grid md:grid-cols-2 gap-4 items-center">
         {/* Box name */}

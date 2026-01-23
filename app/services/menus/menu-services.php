@@ -6,37 +6,19 @@ use ZIPPY_MENU_ORDER\App\Models\Menus\Menu_Model;
 
 class Menu_Services
 {
-    public static function get_menus($name)
+    public static function get_menus($infos)
     {
-        // $args = [
-        //     'post_type'      => 'product',
-        //     'post_status'    => 'publish',
-        //     'posts_per_page' => -1,
-        //     's'              => $name,
-        // ];
 
-        // $query = new \WP_Query($args);
-        // $menus = [];
+        try {
+            $page         = $infos['page'] ?? null;
+            $per_page     = $infos['per_page'] ?? null;
 
-        // if ($query->have_posts()) {
-        //     while ($query->have_posts()) {
-        //         $query->the_post();
-        //         $product = wc_get_product(get_the_ID());
+            $menus = Menu_Model::get_all_menus($page, $per_page);
 
-        //         if (!$product) continue;
-
-        //         $menus[] = [
-        //             'id'          => $product->get_id(),
-        //             'name'        => $product->get_name(),
-        //             'status'      => $product->get_status(),
-        //             'price'       => (float) $product->get_price(),
-        //             'description' => wp_strip_all_tags($product->get_description()),
-        //         ];
-        //     }
-        //     wp_reset_postdata();
-        // }
-
-        // return $products;
+            return $menus;
+        } catch (\Exception $e) {
+            return new \WP_Error('server_error', $e->getMessage());
+        }
     }
 
     public static function get_menu_detail($id)
@@ -67,7 +49,7 @@ class Menu_Services
             $name = $infos['name'];
             $description = $infos['description'];
             $min_pax = $infos['min_pax'] ?? 0;
-            $max_pax = $infos['max_pax'] ?? null;
+            $max_pax = $infos['max_pax'] ?? 0;
             $name = $infos['name'];
             $price = $infos['price'];
             $dishes_qty = $infos['dishes_qty'];
@@ -76,7 +58,7 @@ class Menu_Services
             global $wpdb;
             $wpdb->query('START TRANSACTION');
             $menu = Menu_Model::find_by_id($menu_id);
-    
+
             if (empty($menu)) {
                 $wpdb->query('ROLLBACK');
                 return new \WP_Error('menu_not_found', 'Menu not found!');
@@ -119,7 +101,7 @@ class Menu_Services
             $name = $infos['name'];
             $description = $infos['description'];
             $min_pax = $infos['min_pax'] ?? 0;
-            $max_pax = $infos['max_pax'] ?? null;
+            $max_pax = $infos['max_pax'] ?? 0;
             $name = $infos['name'];
             $price = $infos['price'];
             $dishes_qty = $infos['dishes_qty'];
@@ -140,7 +122,62 @@ class Menu_Services
                 return new \WP_Error('menu_error', 'failed to create menu');
             }
             $wpdb->query('COMMIT');
-            return $menuCreated;
+            return $menuCreated->toArray();
+        } catch (\Exception $e) {
+            $wpdb->query('ROLLBACK');
+            return new \WP_Error('server_error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Delete mmenus
+     */
+
+    public static function delete_menu($id)
+    {
+        try {
+            $menu = Menu_Model::find_by_id($id);
+
+            $deleted_menu = $menu->softDelete();
+
+            if (!$menu) {
+                return false;
+            }
+
+            return $deleted_menu;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Toggle Status
+     */
+
+    public static function update_menu_status($id)
+    {
+        try {
+            global $wpdb;
+            $wpdb->query('START TRANSACTION');
+            $menu = Menu_Model::find_by_id($id);
+
+            if (empty($menu)) {
+                $wpdb->query('ROLLBACK');
+                return new \WP_Error('menu_not_found', 'Menu not found!');
+            }
+
+            $menu_data = $menu->toArray();
+
+            $menuUpdated = $menu->update([
+                'is_active' => !$menu_data['is_active'],
+            ]);
+
+            if (empty($menuUpdated)) {
+                $wpdb->query('ROLLBACK');
+                return new \WP_Error('menu_error', 'failed to update menu');
+            }
+            $wpdb->query('COMMIT');
+            return $menuUpdated?->toArray();
         } catch (\Exception $e) {
             $wpdb->query('ROLLBACK');
             return new \WP_Error('server_error', $e->getMessage());

@@ -29,7 +29,7 @@ class Menu_Model extends Base_Model
      * DEFINE MODEL METHODS HERE
      */
 
-    public static function get_stores($page, $limit): array
+    public static function get_all_menus($page, $limit): array
     {
         return self::find()
             ->whereNull('deleted_at')

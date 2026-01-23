@@ -19,6 +19,13 @@ export const MenuApi = {
   async updateMenu(params) {
     return await makeRequest("/menus", params, 'PUT');
   },
+  async deleteMenu(params) {
+    return await makeRequest("/menus", params, 'DELETE');
+  },
+  async toggleStatus(params) {
+    return await makeRequest("/menus/toggle-status", params, 'POST');
+  },
+  
 };
 
 export const StoreApi = {

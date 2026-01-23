@@ -13,9 +13,9 @@ class Menu_Controllers extends Base_Controller
 
 	public function index(Menu_Request $request)
 	{
-		$infos = Request_Helper::get_params($request);
-		$result = Menu_Services::get_menus($infos);
-		return $this->success($result);
+		$validated = $request->all();
+		$result = Menu_Services::get_menus($validated);
+		return $this->success($result, 200);
 	}
 
 	public function show(Menu_Request $request)
@@ -68,8 +68,25 @@ class Menu_Controllers extends Base_Controller
 
 	public function destroy(Menu_Request $request)
 	{
-		$validated = $request->all();
-		$id = $validated['id'] ?? null;
-		return $this->success($id, 200);
+		try {
+			$validated = $request->all();
+			$id = $validated['id'] ?? null;
+			$deleted = Menu_Services::delete_menu($id);
+			return $this->success($deleted, 200);
+		} catch (\Exception $e) {
+			return $this->error($e->getMessage());
+		}
+	}
+
+	public function toggle_status(Menu_Request $request) 
+	{
+		try {
+			$validated = $request->all();
+			$id = $validated['id'] ?? null;
+			$updated = Menu_Services::update_menu_status($id);
+			return $this->success($updated, 200);
+		} catch (\Exception $e) {
+			return $this->error($e->getMessage());
+		}
 	}
 }

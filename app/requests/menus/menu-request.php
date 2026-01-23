@@ -58,6 +58,14 @@ class Menu_Request extends Base_Request
         ];
     }
 
+    public function toggle_status_validate()
+    {
+        return [
+            'id' => ['type' => 'int', 'required' => true],
+        ];
+    }
+
+
     public function messages()
     {
         return [];

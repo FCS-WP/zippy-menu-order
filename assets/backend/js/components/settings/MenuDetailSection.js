@@ -3,6 +3,7 @@ import Switch from "../common/Switch";
 import Button from "../common/button/Button";
 import { MenuApi } from "../../api";
 import { toast } from "react-toastify";
+import { URL_SINGLE_MENU } from "../../helpers/constants";
 
 export default function MenuDetailSection({ value = {}, onChange }) {
   const updateField = (key, val) => {
@@ -21,7 +22,6 @@ export default function MenuDetailSection({ value = {}, onChange }) {
     };
 
     if (!value?.id || value?.id == 0) {
-      console.log(value)
       await handleCreateMenu(params);
       return true;
     } else {
@@ -32,8 +32,8 @@ export default function MenuDetailSection({ value = {}, onChange }) {
 
   const handleUpdateMenu = async (params) => {
     const res = await MenuApi.updateMenu(params);
-    if (res.status !== 'success') {
-      toast.error(res?.message ?? "Failed to update menu!")
+    if (res.status !== "success") {
+      toast.error(res?.message ?? "Failed to update menu!");
       return;
     }
     toast.success("Menu Updated!");
@@ -41,10 +41,11 @@ export default function MenuDetailSection({ value = {}, onChange }) {
   };
   const handleCreateMenu = async (params) => {
     const res = await MenuApi.createMenu(params);
-    if (res.status !== 'success') {
-      toast.error(res?.message ?? "Failed to save menu!")
+    if (res?.error) {
+      toast.error(res?.error.message ?? "Failed to save menu!");
       return;
     }
+    window.location.replace(URL_SINGLE_MENU + "&menu_id=" + res.data.id);
     return true;
   };
 
@@ -79,7 +80,7 @@ export default function MenuDetailSection({ value = {}, onChange }) {
           <input
             type="number"
             min={1}
-            value={value?.min_pax  ?? 1}
+            value={value?.min_pax ?? 1}
             onChange={(e) => updateField("min_pax", Number(e.target.value))}
             className="w-full rounded-md border px-3 py-2 text-sm"
           />
@@ -91,7 +92,7 @@ export default function MenuDetailSection({ value = {}, onChange }) {
           <input
             type="number"
             min={value?.min_pax}
-            value={value?.max_pax ?? -1}
+            value={value?.max_pax ?? 0}
             onChange={(e) => updateField("max_pax", Number(e.target.value))}
             className="w-full rounded-md border px-3 py-2 text-sm"
           />
@@ -127,7 +128,9 @@ export default function MenuDetailSection({ value = {}, onChange }) {
           {/* Active */}
           <div className="flex items-center gap-3">
             <Switch
-              checked={value?.is_active ?? false}
+              checked={
+                value.is_active && parseInt(value?.is_active) > 0 ? true : false
+              }
               onChange={(v) => updateField("is_active", v)}
             />
             <span className="text-sm font-medium">Menu active</span>

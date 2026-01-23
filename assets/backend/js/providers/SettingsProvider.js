@@ -22,33 +22,6 @@ export const SettingsProvider = ({ children }) => {
     return () => {};
   }, []);
 
-    //   const fetchMenus = async () => {
-  //     try {
-  //       setLoadingOrders(true);
-  //       const params = {
-  //         ...filteredBookings,
-  //         page: tableConfigs.page,
-  //         per_page: tableConfigs.rowsPerPage,
-  //       };
-
-  //       const data = await BookingApi.getBooking(params);
-
-  //       if (data.status === "success") {
-  //         setBookings(data.data.bookings);
-  //         setTableConfigs((prev) => ({
-  //           ...prev,
-  //           totalRows: data.data.total_orders,
-  //         }));
-  //       }
-  //     } catch (err) {
-  //       console.error("Error fetching orders:", err);
-  //       setLoadingOrders(false);
-  //     } finally {
-  //       setLoadingOrders(false);
-  //     }
-  //   };
-
-
   const value = {
     tableConfigs,
     updateState,
