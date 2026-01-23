@@ -35,6 +35,7 @@ class Backend_Menus
       'menu-orders-setttings',
       'menu-orders',
       'single-menu-settings',
+      'stores-settings',
     ];
     $current_page = isset($_GET['page']) ? sanitize_text_field($_GET['page']) : '';
     if (in_array($current_page, $valid_screens, true)) {
@@ -61,13 +62,19 @@ class Backend_Menus
             'menu_slug'  => 'menu-orders-setttings',
             'callback'   => [$this, 'render_menu_orders_settings'],
           ],
+          [
+            'page_title' => 'Stores',
+            'menu_title' => 'Stores',
+            'menu_slug'  => 'stores-settings',
+            'callback'   => [$this, 'render_stores_settings'],
+          ],
         ]
       ]
     ];
 
     new Views($menus);
   }
-  
+
   function register_hidden_admin_pages()
   {
     $pages = [
@@ -101,10 +108,15 @@ class Backend_Menus
   {
     echo '<div id="menu_orders_settings"></div>';
   }
-  
+
   public function render_single_settings()
   {
     echo '<div id="single_menu_settings"></div>';
+  }
+
+  public function render_stores_settings()
+  {
+    echo '<div id="zippy_stores_settings"></div>';
   }
 
   public function build_admin_scripts_and_styles()

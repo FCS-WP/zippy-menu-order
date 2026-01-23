@@ -26,7 +26,7 @@ class Backend_Setting
         add_action('admin_enqueue_scripts', array($this, 'add_google_charts'));
     }
 
-    public function add_google_charts ($hook)
+    public function add_google_charts($hook)
     {
         if ($hook !== 'toplevel_page_bookings') {
             return;
@@ -48,6 +48,7 @@ class Backend_Setting
             'toplevel_page_menu-orders',
             'menu-orders_page_menu-orders-setttings',
             'admin_page_single-menu-settings',
+            'menu-orders_page_stores-settings',
         ];
 
         if (in_array($handle, $apply_urls)) {
