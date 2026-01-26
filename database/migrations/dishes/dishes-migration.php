@@ -12,7 +12,7 @@ class Dishes_Migration extends Base_Migration
     public function __construct()
     {
         parent::__construct();
-        $this->table        = $this->prefix . DISHES_TABLE;
+        $this->table = $this->prefix . DISHES_TABLE;
     }
 
     protected function get_sql()

@@ -14,6 +14,7 @@ class Menu_Model extends Base_Model
         'description',
         'min_pax',
         'max_pax',
+        'featured_img',
         'price',
         'dishes_qty',
         'is_active',
@@ -33,7 +34,13 @@ class Menu_Model extends Base_Model
     {
         return self::find()
             ->whereNull('deleted_at')
+            ->andWhere('=', 'is_active', 1)
             ->paginate($page, $limit);
+    }
+
+    public function get_dishes_menus()
+    {
+        return $this->hasMany(Dishes_Menu_Model::class, 'menu_id', 'id');
     }
 
     public static function find_by_id($id): ?self

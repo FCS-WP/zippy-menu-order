@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DishesBox from "./DishesBox";
 
-const MenuBoxes = ({ data, title, onClickRemoveBox }) => {
+const MenuBoxes = ({ data, title, onClickRemoveBox, boxType }) => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const menuId = urlParams.get("menu_id") ?? null;
   const [boxes, setBoxes] = useState(data);
   // Add new box
   const addBox = () => {
     setBoxes((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), name: "", dishes: [] },
+      { id: crypto.randomUUID(), name: "", dishes: [], type: boxType, max_qty: 0, min_qty: 0, is_required: 1, menu_id: menuId },
     ]);
   };
 
@@ -19,19 +21,10 @@ const MenuBoxes = ({ data, title, onClickRemoveBox }) => {
   };
 
   // Add dish to box (prevent duplicate)
-  const addDishToBox = (boxId, dish) => {
-    setBoxes((prev) =>
-      prev.map((box) => {
-        if (box.id !== boxId) return box;
-        if (box.dishes.some((d) => d.id === dish.id)) return box;
 
-        return {
-          ...box,
-          dishes: [...box.dishes, dish],
-        };
-      }),
-    );
-  };
+  useEffect(()=>{
+    setBoxes(data);
+  }, [data])
 
   return (
     <div>
@@ -43,7 +36,6 @@ const MenuBoxes = ({ data, title, onClickRemoveBox }) => {
               key={box.id}
               box={box}
               onClickRemoveBox={onClickRemoveBox}
-              addDishToBox={addDishToBox}
             />
           ))}
         </div>

@@ -20,7 +20,7 @@ if (!defined('MENUS_TABLE')) {
 }
 
 if (!defined('DISHES_MENU_TABLE')) {
-  define('DISHES_MENU_TABLE', 'dishes_menu');
+  define('DISHES_MENU_TABLE', 'dishes_menus');
 }
 
 

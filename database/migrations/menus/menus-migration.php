@@ -6,7 +6,7 @@ use ZIPPY_MENU_ORDER\Core\Base_Migration;
 
 class Menus_Migration extends Base_Migration
 {
-    protected $version = '1.2';
+    protected $version = '1.3';
     protected $stores_table;
 
     public function __construct()
@@ -22,7 +22,8 @@ class Menus_Migration extends Base_Migration
         name VARCHAR(255) NOT NULL,
         description TEXT NULL,
         min_pax INT NOT NULL DEFAULT 1,
-        max_pax INT NOT NULL,
+        max_pax INT NULL,
+        featured_img TEXT NULL,
         dishes_qty INT NOT NULL DEFAULT 0,
         price DECIMAL(10,2) NOT NULL DEFAULT 0,
         is_active TINYINT(1) NOT NULL DEFAULT 1,

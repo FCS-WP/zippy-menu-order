@@ -6,12 +6,15 @@ import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import Button from "../common/button/Button";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import DishItem from "./DishItem";
+import { clearConfigCache } from "prettier";
 
-const DishesBox = ({ box, updateBoxName, addDishToBox, onClickRemoveBox }) => {
+const DishesBox = ({ box, onClickRemoveBox }) => {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchMessage, setSearchMessage] = useState("");
   const [open, setOpen] = useState(false);
+  const [boxData, setBoxData] = useState(box);
   const ref = useRef(null);
 
   // Close dropdown when clicking outside
@@ -38,6 +41,27 @@ const DishesBox = ({ box, updateBoxName, addDishToBox, onClickRemoveBox }) => {
     return null;
   };
 
+  // Add Dish
+  const onClickAddDishToBox = (dish) => {
+    const newDish = {
+      id: crypto.randomUUID(),
+      product_id: dish.id,
+      name: dish.name,
+      extra_price: 0,
+    };
+
+    setBoxData({ ...boxData, ["dishes"]: [...boxData.dishes, newDish] });
+    setSearch("");
+    setOpen(false);
+  };
+
+  const onRemoveDish = async (dish) => {
+    const updatedDishes = boxData.dishes.filter((item) => {
+      return parseInt(item.product_id) !== parseInt(dish.product_id);
+    });
+    setBoxData({ ...boxData, ["dishes"]: updatedDishes });
+  };
+
   const debounceSearchServices = useCallback(
     debounce(async (keyword) => {
       if (keyword.trim()) {
@@ -60,25 +84,43 @@ const DishesBox = ({ box, updateBoxName, addDishToBox, onClickRemoveBox }) => {
     [],
   );
 
-  const handleClickRemove = async () => {};
+  const onSaveChanges = () => {
+    console.log("hande save changes: ", boxData);
+  };
 
   useEffect(() => {
     debounceSearchServices(search);
   }, [search]);
 
+  useEffect(() => {
+    setBoxData(box);
+  }, [box]);
+
+  const updateField = (key, val) => {
+    setBoxData({ ...boxData, [key]: val });
+  };
+
+  const updateDishField = (key, val, product_id) => {
+    const newDishes = [];
+    boxData?.dishes?.map((item) => {
+      if (parseInt(item.product_id) === parseInt(product_id)) {
+        const newItem = { ...item, [key]: val };
+        newDishes.push(newItem);
+      } else {
+        newDishes.push(item);
+      }
+    });
+
+    setBoxData({ ...boxData, ["dishes"]: newDishes });
+  };
+
+  useState(() => {}, [boxData]);
+
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
-      <input
-        className="box-type"
-        type="hidden"
-        // value={box.max_qty ?? 0}
-        // onChange={(e) =>
-        //   updateBoxName(box.id, e.target.value)
-        // }
-      />
       <div className="flex justify-between">
         <h2 className="!text-3xl !mt-0 !mb-4 font-bold !text-primary">
-          {box.name}
+          {boxData.name}
         </h2>
         <Button
           className="bg-white border-0 py-0"
@@ -94,37 +136,38 @@ const DishesBox = ({ box, updateBoxName, addDishToBox, onClickRemoveBox }) => {
           <span className="mr-4"> Name </span>
           <input
             type="text"
-            value={box.name}
-            onChange={(e) => updateBoxName(box.id, e.target.value)}
+            value={boxData.name}
+            onChange={(e) => updateField("name", e.target.value)}
             className="w-full rounded-md border px-3 py-2 text-sm"
           />
         </div>
 
         <div className="flex gap-4 items-center">
           <span> Required </span>
-          <Switch />
-        </div>
-        {/* max_qty */}
-        <div>
-          <span> Max QTY </span>
-          <input
-            type="number"
-            // value={box.max_qty ?? 0}
-            // onChange={(e) =>
-            //   updateBoxName(box.id, e.target.value)
-            // }
-            className="w-full rounded-md border px-3 py-2 text-sm"
+          <Switch
+            checked={boxData?.is_required > 0 ? true : false}
+            onChange={(v) => updateField("is_required", v ? 1 : 0)}
           />
         </div>
+
         {/* Min_qty */}
         <div>
           <span> Min QTY </span>
           <input
             type="number"
-            // value={box.max_qty ?? 0}
-            // onChange={(e) =>
-            //   updateBoxName(box.id, e.target.value)
-            // }
+            value={boxData.min_qty ?? 0}
+            onChange={(e) => updateField("min_qty", e.target.value)}
+            className="w-full rounded-md border px-3 py-2 text-sm"
+          />
+        </div>
+
+        {/* max_qty */}
+        <div>
+          <span> Max QTY </span>
+          <input
+            type="number"
+            value={boxData.max_qty ?? 0}
+            onChange={(e) => updateField("max_qty", e.target.value)}
             className="w-full rounded-md border px-3 py-2 text-sm"
           />
         </div>
@@ -149,7 +192,9 @@ const DishesBox = ({ box, updateBoxName, addDishToBox, onClickRemoveBox }) => {
           <div className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-md border bg-white shadow-lg">
             {searchResults.length > 0 ? (
               searchResults.map((dish) => {
-                const exists = box.dishes.some((d) => d.id === dish.id);
+                const exists = boxData.dishes.some(
+                  (d) => parseInt(d.product_id) === parseInt(dish.id),
+                );
 
                 return (
                   <div
@@ -159,11 +204,7 @@ const DishesBox = ({ box, updateBoxName, addDishToBox, onClickRemoveBox }) => {
                     <span>{dish.name}</span>
                     <button
                       disabled={exists}
-                      onClick={() => {
-                        addDishToBox(box.id, dish);
-                        setSearch("");
-                        setOpen(false);
-                      }}
+                      onClick={() => onClickAddDishToBox(dish)}
                       className={`px-2 py-1 rounded cursor-pointer text-xs
                         ${
                           exists
@@ -184,18 +225,25 @@ const DishesBox = ({ box, updateBoxName, addDishToBox, onClickRemoveBox }) => {
       </div>
 
       {/* Added dishes */}
-      {box.dishes.length > 0 && (
+      {boxData.dishes.length > 0 && (
         <div className="mt-4">
           <h4 className="!text-xl font-bold text-primary mb-2">Added dishes</h4>
-          <ul className="space-y-1 text-sm">
-            {box.dishes.map((dish) => (
-              <li key={dish.id} className="rounded bg-gray-50 px-3 py-1">
-                {dish.name}
-              </li>
+          <div>
+            {boxData.dishes.map((dish) => (
+              <DishItem
+                dish={dish}
+                key={dish.id}
+                onRemoveDish={onRemoveDish}
+                updateDishField={updateDishField}
+              />
             ))}
-          </ul>
+          </div>
         </div>
       )}
+
+      <div className="flex justify-end mt-4">
+        <Button onClick={onSaveChanges}>Save changes</Button>
+      </div>
     </div>
   );
 };
