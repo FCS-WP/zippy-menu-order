@@ -7,9 +7,9 @@ use ZIPPY_MENU_ORDER\Core\Base_Model;
 class Dishes_Model extends Base_Model
 {
     public string $table;
-    const TABLE_NAME = 'dishes';
 
     protected array $fillable = [
+        // Define fillable fields here
         'product_id',
         'dishes_menu_id',
         'extra_price',
@@ -18,14 +18,26 @@ class Dishes_Model extends Base_Model
     public function __construct($data = [])
     {
         parent::__construct($data);
-        $this->table = DB_MENU_ORDER_PREFIX . self::TABLE_NAME;
+        $this->table = DB_MENU_ORDER_PREFIX . 'dishes';
     }
 
-    public static function find_by_id(int $id): ?self
+    /**
+     * DEFINE MODEL METHODS HERE
+     */
+
+    public static function get_dishes_from_menu($dishes_menu_id): array
+    {
+        return self::find()
+            ->whereNull('deleted_at')
+            ->andWhere('=', 'dishes_menu_id', $dishes_menu_id)
+            ->asArray();
+    }
+
+
+    public static function find_by_id($id): ?self
     {
         return self::find()
             ->where(['id' => $id])
-            ->andWhere('IS NULL', 'deleted_at')
             ->one();
     }
 }

@@ -24,6 +24,9 @@ class Backend_Setting
     {
         add_action('admin_enqueue_scripts', array($this, 'remove_default_stylesheets'));
         add_action('admin_enqueue_scripts', array($this, 'add_google_charts'));
+        add_action('admin_enqueue_scripts', function () {
+            wp_enqueue_media();
+        });
     }
 
     public function add_google_charts($hook)

@@ -24,16 +24,28 @@ class Menu_Services
     public static function get_menu_detail($id)
     {
         try {
-            $menu = Menu_Model::find_by_id($id)?->toArray();
+            $menu = Menu_Model::find_by_id($id);
 
             if (empty($menu)) {
                 return new \WP_Error('menu_not_found', 'Menu not found!');
             }
 
-            return $menu;
+            $result = $menu->toArray();
+            $result['dishes_menus'] = Dishes_Menu_Services::get_dishes_menus(['menu_id' => $menu->id]);
+
+            return $result;
         } catch (\Exception $e) {
             return new \WP_Error('server_error', $e->getMessage());
         }
+    }
+
+    public static function dishes_menus_to_array($dishes_menus)
+    {
+        $results = [];
+        foreach ($dishes_menus as $menu) {
+            $results[] = $menu->toArray();
+        }
+        return $results;
     }
 
     /**
@@ -47,7 +59,8 @@ class Menu_Services
         try {
             $menu_id = $infos['id'];
             $name = $infos['name'];
-            $description = $infos['description'];
+            $description = $infos['description'] ?? "";
+            $featured_img = $infos['featured_img'] ?? "";
             $min_pax = $infos['min_pax'] ?? 0;
             $max_pax = $infos['max_pax'] ?? 0;
             $name = $infos['name'];
@@ -67,6 +80,7 @@ class Menu_Services
             $menuUpdated = $menu->update([
                 'name' => $name,
                 'description' => $description,
+                'featured_img' => $featured_img,
                 'min_pax'  => $min_pax,
                 'max_pax'  => $max_pax,
                 'price'  => $price,
@@ -99,7 +113,8 @@ class Menu_Services
             $wpdb->query('START TRANSACTION');
 
             $name = $infos['name'];
-            $description = $infos['description'];
+            $description = $infos['description'] ?? "";
+            $featured_img = $infos['featured_img'] ?? "";
             $min_pax = $infos['min_pax'] ?? 0;
             $max_pax = $infos['max_pax'] ?? 0;
             $name = $infos['name'];
@@ -111,6 +126,7 @@ class Menu_Services
             $menuCreated = $menu->create([
                 'name' => $name,
                 'description' => $description,
+                'featured_img' => $featured_img,
                 'min_pax'  => $min_pax,
                 'max_pax'  => $max_pax,
                 'price'  => $price,

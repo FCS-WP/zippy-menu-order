@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { BookingApi, MenuApi } from "../api";
+import { MenuApi } from "../api";
 
 export const useFetchMenu = () => {
   const [menus, setMenus] = useState([]);
@@ -24,7 +24,6 @@ export const useFetchMenu = () => {
         setError(data?.message ?? "fetch error");
       }
       setIsFetched(true);
-
     } catch (err) {
       console.error("Error fetching menu:", err);
       setError(err);

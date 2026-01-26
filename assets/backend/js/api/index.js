@@ -75,3 +75,9 @@ export const SpecialDaysApi = {
     return await makeRequest("/special-days", params, "DELETE");
   },
 };
+
+export const DishesMenusApi = {
+  async getDishesMenus(params) {
+    return await makeRequest(`/dishes-menus`, params);
+  },
+};

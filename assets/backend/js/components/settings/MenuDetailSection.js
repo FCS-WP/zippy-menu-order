@@ -4,6 +4,7 @@ import Button from "../common/button/Button";
 import { MenuApi } from "../../api";
 import { toast } from "react-toastify";
 import { URL_SINGLE_MENU } from "../../helpers/constants";
+import WPMediaBtn from "../common/WPMediaBtn";
 
 export default function MenuDetailSection({ value = {}, onChange }) {
   const updateField = (key, val) => {
@@ -14,6 +15,7 @@ export default function MenuDetailSection({ value = {}, onChange }) {
     let params = {
       name: value?.name,
       description: value?.description,
+      featured_img: value?.featured_img ?? "",
       min_pax: value?.min_pax ?? 1,
       max_pax: value?.max_pax ?? null,
       is_active: value?.is_active ? 1 : 0,
@@ -39,6 +41,7 @@ export default function MenuDetailSection({ value = {}, onChange }) {
     toast.success("Menu Updated!");
     return true;
   };
+
   const handleCreateMenu = async (params) => {
     const res = await MenuApi.createMenu(params);
     if (res?.error) {
@@ -47,6 +50,10 @@ export default function MenuDetailSection({ value = {}, onChange }) {
     }
     window.location.replace(URL_SINGLE_MENU + "&menu_id=" + res.data.id);
     return true;
+  };
+
+  const handleSelectImage = (data) => {
+    updateField("featured_img", data.url);
   };
 
   return (
@@ -123,6 +130,23 @@ export default function MenuDetailSection({ value = {}, onChange }) {
             onChange={(e) => updateField("dishes_qty", Number(e.target.value))}
             className="w-full rounded-md border px-3 py-2 text-sm"
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Featured Image
+          </label>
+          <div className="flex gap-4">
+            <div className="w-64">
+              <img
+                className="object-cover"
+                src={value?.featured_img ?? ""}
+                alt="menu featured"
+              />
+            </div>
+            <div>
+              <WPMediaBtn onSelect={handleSelectImage} />
+            </div>
+          </div>
         </div>
         <div className="col-span-2 flex justify-between">
           {/* Active */}
