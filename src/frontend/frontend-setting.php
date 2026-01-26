@@ -22,14 +22,57 @@ class FrontEnd_Setting
 
     public function __construct()
     {
-        // add_shortcode('booking_form', [$this, 'register_booking_form']);
+        add_shortcode('order_form', [$this, 'register_order_form']);
         add_action('wp_enqueue_scripts', [$this, 'build_style_and_scripts'], 9999);
+        register_activation_hook(ZIPPY_MENU_ORDER_BASENAME, [$this, 'create_order_pages']);
+    }
+
+    function register_order_form($atts)
+    {
+        return '<div id="frontend_order_form"></div>';
+    }
+
+    public function create_order_pages(): void
+    {
+        $pages = [
+            [
+                'title'   => 'Order Form',
+                'slug'    => 'order-form',
+                'content' => '[order_form]',
+            ],
+        ];
+
+        foreach ($pages as $page) {
+            $this->create_page_if_not_exists($page['title'], $page['slug'], $page['content']);
+        }
+    }
+
+    /**
+     * Create page if it does not already exist
+     */
+    function create_page_if_not_exists($title, $slug, $content = '')
+    {
+
+        // Check if page already exists by slug
+        $page_exists = get_page_by_path($slug);
+
+        if (!$page_exists) {
+            $new_page = [
+                'post_title'    => $title,
+                'post_name'     => $slug,
+                'post_content'  => $content,
+                'post_status'   => 'publish',
+                'post_type'     => 'page',
+            ];
+
+            wp_insert_post($new_page);
+        }
     }
 
     function build_style_and_scripts()
     {
         $version = time();
-        $available_page = ['booking-form', 'my-account', 'store-list'];
+        $available_page = ['order-form', 'my-account', 'store-list'];
 
         $is_allowed =
             is_page($available_page) ||
