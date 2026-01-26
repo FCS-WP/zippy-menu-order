@@ -56,12 +56,25 @@ const SELECTED_ITEM = {
     "https://web-staging.theshin.info/wp-content/uploads/2025/07/IMG_3425-768x1024.jpg", // Update with actual image path
 };
 
+// Generate time slots from 11:00 AM to 6:00 PM with 30-minute intervals
+const TIME_SLOTS = [];
+for (let hour = 11; hour <= 18; hour++) {
+  for (let minute = 0; minute < 60; minute += 30) {
+    if (hour === 18 && minute > 0) break; // Stop at 6:00 PM
+    const period = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour > 12 ? hour - 12 : hour;
+    const time = `${displayHour}:${minute.toString().padStart(2, "0")} ${period}`;
+    TIME_SLOTS.push(time);
+  }
+}
+
 const OrderForm = () => {
   const menuId =
     new URLSearchParams(window.location.search).get("menu_id") || "";
 
   const [selectedItems, setSelectedItems] = useState([]);
   const [numberOfPax, setNumberOfPax] = useState(80);
+  const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
 
   const MINIMUM_PAX = 80;
@@ -109,22 +122,27 @@ const OrderForm = () => {
             <div className="form-group">
               <label className="form-label">DELIVERY DATE</label>
               <input
-                type="text"
+                type="date"
                 className="form-input"
-                value={deliveryTime}
-                onChange={(e) => setDeliveryTime(e.target.value)}
+                value={deliveryDate}
+                onChange={(e) => setDeliveryDate(e.target.value)}
               />
             </div>
 
             <div className="form-group">
               <label className="form-label">DELIVERY TIME</label>
-              <input
-                type="text"
-                className="form-input"
-                placeholder="hh:mm"
+              <select
+                className="form-select"
                 value={deliveryTime}
                 onChange={(e) => setDeliveryTime(e.target.value)}
-              />
+              >
+                <option value="">hh:mm</option>
+                {TIME_SLOTS.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
