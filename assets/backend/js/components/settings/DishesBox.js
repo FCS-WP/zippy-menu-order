@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Switch from "../common/Switch";
-import { ProductApi } from "../../api";
+import { DishesMenusApi, ProductApi } from "../../api";
 import { debounce } from "../../helpers/debounce";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,6 +13,7 @@ const DishesBox = ({ box, onClickRemoveBox }) => {
   const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchMessage, setSearchMessage] = useState("");
+  const [isBtnLoading, setIsBtnLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [boxData, setBoxData] = useState(box);
   const ref = useRef(null);
@@ -48,11 +49,22 @@ const DishesBox = ({ box, onClickRemoveBox }) => {
       product_id: dish.id,
       name: dish.name,
       extra_price: 0,
+      is_new: true,
     };
 
     setBoxData({ ...boxData, ["dishes"]: [...boxData.dishes, newDish] });
     setSearch("");
     setOpen(false);
+  };
+
+  const getCleanDishesData = () => {
+    const newDishes = boxData.dishes.map((item) => {
+      if (item?.is_new) {
+        return { ...item, id: "" };
+      }
+      return item;
+    });
+    return newDishes;
   };
 
   const onRemoveDish = async (dish) => {
@@ -84,8 +96,47 @@ const DishesBox = ({ box, onClickRemoveBox }) => {
     [],
   );
 
-  const onSaveChanges = () => {
-    console.log("hande save changes: ", boxData);
+  const onSaveChanges = async () => {
+    setIsBtnLoading(true);
+    let params = {
+      is_required: boxData.is_required,
+      max_qty: parseInt(boxData.max_qty) ?? 0,
+      min_qty: parseInt(boxData.min_qty) ?? 0,
+      menu_id: parseInt(boxData.menu_id),
+      type: boxData.type,
+      name: boxData.name,
+      dishes: getCleanDishesData(boxData.dishes) ?? [],
+    };
+
+    if (boxData?.is_new) {
+      await handleCreateBox(params);
+      setIsBtnLoading(false);
+      return;
+    }
+    ((params.id = boxData.id), await handleUpdateBox(params));
+    setIsBtnLoading(false);
+    return;
+  };
+
+  const handleCreateBox = async (params) => {
+    const res = await DishesMenusApi.createDishesMenu(params);
+    if (!res || res.status !== "success") {
+      toast.error("Failed to create menu!");
+      return;
+    }
+    setBoxData({ ...boxData, id: res.data.id, is_new: false });
+    toast.success("Menu has been created!");
+    return;
+  };
+
+  const handleUpdateBox = async (params) => {
+    const res = await DishesMenusApi.updateDishesMenu(params);
+    if (!res || res.status !== "success") {
+      toast.error("Failed to save changes!");
+      return;
+    }
+    toast.success("Menu has been updated!");
+    return;
   };
 
   useEffect(() => {
@@ -113,8 +164,6 @@ const DishesBox = ({ box, onClickRemoveBox }) => {
 
     setBoxData({ ...boxData, ["dishes"]: newDishes });
   };
-
-  useState(() => {}, [boxData]);
 
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
@@ -155,6 +204,7 @@ const DishesBox = ({ box, onClickRemoveBox }) => {
           <span> Min QTY </span>
           <input
             type="number"
+            min={0}
             value={boxData.min_qty ?? 0}
             onChange={(e) => updateField("min_qty", e.target.value)}
             className="w-full rounded-md border px-3 py-2 text-sm"
@@ -166,6 +216,7 @@ const DishesBox = ({ box, onClickRemoveBox }) => {
           <span> Max QTY </span>
           <input
             type="number"
+            min={0}
             value={boxData.max_qty ?? 0}
             onChange={(e) => updateField("max_qty", e.target.value)}
             className="w-full rounded-md border px-3 py-2 text-sm"
@@ -242,7 +293,13 @@ const DishesBox = ({ box, onClickRemoveBox }) => {
       )}
 
       <div className="flex justify-end mt-4">
-        <Button onClick={onSaveChanges}>Save changes</Button>
+        <Button
+          isLoading={isBtnLoading}
+          onClick={onSaveChanges}
+          disabled={isBtnLoading}
+        >
+          Save changes
+        </Button>
       </div>
     </div>
   );

@@ -39,7 +39,6 @@ export const useFetchMenu = () => {
       const data = await MenuApi.getMenus(tableConfig);
 
       if (data?.status === "success") {
-        console.log(data.data.data);
         setMenus(data.data.data || []);
         setDataPagination(data.data.pagination || 0);
       }

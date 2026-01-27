@@ -40,4 +40,11 @@ class Dishes_Model extends Base_Model
             ->where(['id' => $id])
             ->one();
     }
+
+    public static function find_by_menu_id($id) 
+    {
+        return self::find()
+            ->where(['dishes_menu_id' => $id])
+            ->all();
+    }
 }

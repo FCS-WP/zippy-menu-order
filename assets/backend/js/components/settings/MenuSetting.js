@@ -6,7 +6,7 @@ import MenuDetailSection from "./MenuDetailSection";
 import MenuBoxes from "./MenuBoxes";
 import { useFetchMenu } from "../../hooks/useFetchMenus";
 import { toast } from "react-toastify";
-import { MenuApi } from "../../api";
+import { DishesMenusApi, MenuApi } from "../../api";
 import ConfirmPopup from "../common/popup/ConfirmPopup";
 
 export default function MenuSetting() {
@@ -26,40 +26,6 @@ export default function MenuSetting() {
       window.alert("Invalid Menu");
       return;
     }
-  };
-
-  // Add new box
-  const addBox = () => {
-    setBoxes((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), name: "", dishes: [] },
-    ]);
-  };
-
-  // Update box name
-  const updateBoxName = (boxId, value) => {
-    setBoxes((prev) =>
-      prev.map((box) => (box.id === boxId ? { ...box, name: value } : box)),
-    );
-  };
-
-  // Add dish to box (prevent duplicate)
-  const addDishToBox = (boxId, dish) => {
-    setBoxes((prev) =>
-      prev.map((box) => {
-        if (box.id !== boxId) return box;
-        if (box.dishes.some((d) => d.id === dish.id)) return box;
-
-        return {
-          ...box,
-          dishes: [...box.dishes, dish],
-        };
-      }),
-    );
-  };
-
-  const handleSaveChanges = () => {
-    console.log(mainMenu);
   };
 
   useEffect(() => {
@@ -82,38 +48,37 @@ export default function MenuSetting() {
   const seprateMenusByType = (dishesMenus) => {
     let addons = [];
     let main = [];
-    dishesMenus.map((item)=>{
-      if (item.type == 'main') {
+    dishesMenus.map((item) => {
+      if (item.type == "main") {
         main.push(item);
       } else {
         addons.push(item);
       }
-    })
+    });
 
     setAddonsDishesMenu(addons);
     setMainDishesMenu(main);
-  }
+  };
 
   useEffect(() => {
     setMenuDetail(currentMenu);
-    if(currentMenu?.dishes_menus?.length > 0) {
+    if (currentMenu?.dishes_menus?.length > 0) {
       seprateMenusByType(currentMenu?.dishes_menus);
     }
   }, [currentMenu]);
 
   const handleDeleteBox = async (id) => {
-    // const res = await MenuApi.deleteMenu({
-    //   id: id,
-    // });
-    // if (!res || res.status !== "success") {
-    //   toast.error("Failed to delete menu!");
-    //   return;
-    // }
-    // toast.success("Box has been deleted!");
-    // setIsOpenPopupConfirm(false);
-    // return;
-    console.log("Delete Box", id);
+    const res = await DishesMenusApi.deleteDishesMenu({
+      id: id,
+    });
+    if (!res || res.status !== "success") {
+      toast.error("Failed to delete menu!");
+      return;
+    }
+    toast.success("Box has been deleted!");
     setIsOpenPopupConfirm(false);
+    fetchMenuDetail(menuId);
+    return;
   };
 
   const onClickRemoveBox = (item) => {
@@ -131,7 +96,7 @@ export default function MenuSetting() {
           <MenuDetailSection value={menuDetail} onChange={setMenuDetail} />
         </div>
         <MenuBoxes
-          boxType={'main'}
+          boxType={"main"}
           data={mainDishesMenu}
           title={"Main Menu"}
           onClickRemoveBox={onClickRemoveBox}
@@ -140,18 +105,12 @@ export default function MenuSetting() {
       {/* Addons */}
       <div>
         <MenuBoxes
-          boxType={'addons'}
+          boxType={"addons"}
           data={addonsDishesMenu}
           title={"Addons Menu"}
           onClickRemoveBox={onClickRemoveBox}
         />
       </div>
-      {/* <Button
-        onClick={handleSaveChanges}
-        className="cursor-pointer rounded-md mt-6 bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-green-300"
-      >
-        Save Changes
-      </Button> */}
 
       <ConfirmPopup
         isOpen={isOpenPopupConfirm}

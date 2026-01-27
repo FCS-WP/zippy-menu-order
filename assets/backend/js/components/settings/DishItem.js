@@ -13,6 +13,7 @@ const DishItem = ({ dish, onRemoveDish, updateDishField }) => {
       <div className="dish-extra-prices grow-1">
          <input
             type="number"
+            min={0}
             value={dish?.extra_price ?? 0}
             onChange={(e) => updateDishField("extra_price", e.target.value, dish.product_id)}
             className="w-full rounded-md border px-3 py-2 text-sm bg-white"

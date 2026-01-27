@@ -9,22 +9,37 @@ const MenuBoxes = ({ data, title, onClickRemoveBox, boxType }) => {
   const addBox = () => {
     setBoxes((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), name: "", dishes: [], type: boxType, max_qty: 0, min_qty: 0, is_required: 1, menu_id: menuId },
+      {
+        id: crypto.randomUUID(),
+        name: "",
+        dishes: [],
+        type: boxType,
+        max_qty: 0,
+        min_qty: 0,
+        is_required: 1,
+        menu_id: menuId,
+        is_new: true,
+      },
     ]);
   };
 
-  // Update box name
-  const updateBoxName = (boxId, value) => {
-    setBoxes((prev) =>
-      prev.map((box) => (box.id === boxId ? { ...box, name: value } : box)),
-    );
+  const removeBox = (id) => {
+    setBoxes((prev) => prev.filter((box) => box.id !== id));
+  };
+
+  const handleRemoveBox = (item) => {
+    if (item.is_new) {
+      removeBox(item.id);
+      return;
+    }
+    onClickRemoveBox(item);
   };
 
   // Add dish to box (prevent duplicate)
 
-  useEffect(()=>{
+  useEffect(() => {
     setBoxes(data);
-  }, [data])
+  }, [data]);
 
   return (
     <div>
@@ -35,7 +50,7 @@ const MenuBoxes = ({ data, title, onClickRemoveBox, boxType }) => {
             <DishesBox
               key={box.id}
               box={box}
-              onClickRemoveBox={onClickRemoveBox}
+              onClickRemoveBox={handleRemoveBox}
             />
           ))}
         </div>
