@@ -97,12 +97,12 @@ class Base_Model
         global $wpdb;
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM {$related->table} WHERE $foreignKey = %d",
+                "SELECT * FROM {$related->table} WHERE deleted_at IS NULL AND $foreignKey = %d",
                 $value
             ),
             ARRAY_A
         );
-
+    
         $result = [];
         foreach ($rows as $row) {
             $result[] = new $relatedClass($row);

@@ -80,4 +80,13 @@ export const DishesMenusApi = {
   async getDishesMenus(params) {
     return await makeRequest(`/dishes-menus`, params);
   },
+  async createDishesMenu(params) {
+    return await makeRequest(`/dishes-menus`, params, 'POST');
+  },
+  async updateDishesMenu(params) {
+    return await makeRequest(`/dishes-menus`, params, 'PUT');
+  },
+  async deleteDishesMenu(params) {
+    return await makeRequest(`/dishes-menus`, params, 'DELETE');
+  },
 };

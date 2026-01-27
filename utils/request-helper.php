@@ -65,7 +65,7 @@ class Request_Helper
 
                 case 'int':
                 case 'integer':
-                    if (!filter_var($value, FILTER_VALIDATE_INT)) {
+                    if ($value === '' || filter_var($value, FILTER_VALIDATE_INT) === false) {
                         $errors[] = "{$field} must be an integer.";
                     }
                     break;

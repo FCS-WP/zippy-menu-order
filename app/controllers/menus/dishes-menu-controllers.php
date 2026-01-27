@@ -73,20 +73,8 @@ class Dishes_Menu_Controllers extends Base_Controller
 		try {
 			$validated = $request->all();
 			$id = $validated['id'] ?? null;
-			$deleted = Menu_Services::delete_menu($id);
+			$deleted = Dishes_Menu_Services::delete_dishes_menu($id);
 			return $this->success($deleted, 200);
-		} catch (\Exception $e) {
-			return $this->error($e->getMessage());
-		}
-	}
-
-	public function toggle_status(Dishes_Menu_Request $request) 
-	{
-		try {
-			$validated = $request->all();
-			$id = $validated['id'] ?? null;
-			$updated = Menu_Services::update_menu_status($id);
-			return $this->success($updated, 200);
 		} catch (\Exception $e) {
 			return $this->error($e->getMessage());
 		}

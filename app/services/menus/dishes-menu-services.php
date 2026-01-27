@@ -3,6 +3,7 @@
 namespace ZIPPY_MENU_ORDER\App\Services\Menus;
 
 use ZIPPY_MENU_ORDER\App\Models\Menus\Dishes_Menu_Model;
+use ZIPPY_MENU_ORDER\App\Services\Dishes\Dishes_Services;
 
 class Dishes_Menu_Services
 {
@@ -82,7 +83,7 @@ class Dishes_Menu_Services
                 return new \WP_Error('menu_not_found', 'Dishes menu not found!');
             }
 
-            $menuUpdated = $menu->update([
+            $menu_updated = $menu->update([
                 'name' => $name,
                 'type'  => $type,
                 'min_qty'  => $min_qty,
@@ -91,12 +92,23 @@ class Dishes_Menu_Services
                 'is_required' => $is_required,
             ]);
 
-            if (empty($menuUpdated)) {
+            if (empty($menu_updated)) {
                 $wpdb->query('ROLLBACK');
                 return new \WP_Error('menu_error', 'failed to update menu');
             }
+
+            // Sync dishes
+            $sync_dishes = Dishes_Services::sync_dishes_menu($menu_updated->id, $dishes);
+
+            if (!$sync_dishes) {
+                $wpdb->query('ROLLBACK');
+                return new \WP_Error('dishes_error', 'failed to sync dishes');
+            };
+
             $wpdb->query('COMMIT');
-            return $menuUpdated?->toArray();
+            $results = $menu_updated?->toArray();
+            $results['dishes'] = self::dishes_to_array($menu->dishes);
+            return $results;
         } catch (\Exception $e) {
             $wpdb->query('ROLLBACK');
             return new \WP_Error('server_error', $e->getMessage());
@@ -123,8 +135,8 @@ class Dishes_Menu_Services
             $type = $data['type'] ?? 'main';
             $dishes = $data['dishes'] ?? [];
 
-            $menu = new Menu_Model();
-            $menuCreated = $menu->create([
+            $menu = new Dishes_Menu_Model();
+            $menu_created = $menu->create([
                 'name' => $name,
                 'type'  => $type,
                 'min_qty'  => $min_qty,
@@ -133,13 +145,21 @@ class Dishes_Menu_Services
                 'is_required' => $is_required,
             ]);
 
-            if (empty($menuCreated)) {
+
+            if (empty($menu_created)) {
                 $wpdb->query('ROLLBACK');
                 return new \WP_Error('menu_error', 'failed to create menu');
             }
+            // Sync dishes
+            $sync_dishes = Dishes_Services::sync_dishes_menu($menu_created->id, $dishes);
+
+            if (!$sync_dishes) {
+                $wpdb->query('ROLLBACK');
+                return new \WP_Error('dishes_error', 'failed to sync dishes');
+            };
 
             $wpdb->query('COMMIT');
-            return $menuCreated->toArray();
+            return $menu_created->toArray();
         } catch (\Exception $e) {
             $wpdb->query('ROLLBACK');
             return new \WP_Error('server_error', $e->getMessage());
