@@ -8,10 +8,14 @@ class Menu_Services
 {
     public static function get_menus($infos)
     {
-
         try {
             $page         = $infos['page'] ?? null;
             $per_page     = $infos['per_page'] ?? null;
+
+            if ($infos['ids']) {
+                $menus = Menu_Model::get_menus_by_ids($infos['ids']);
+                return self::db_menus_to_array($menus);
+            }
 
             $menus = Menu_Model::get_all_menus($page, $per_page);
 
@@ -43,6 +47,16 @@ class Menu_Services
     {
         $results = [];
         foreach ($dishes_menus as $menu) {
+            $results[] = $menu->toArray();
+        }
+        return $results;
+    }
+
+    
+    public static function db_menus_to_array($menus)
+    {
+        $results = [];
+        foreach ($menus as $menu) {
             $results[] = $menu->toArray();
         }
         return $results;

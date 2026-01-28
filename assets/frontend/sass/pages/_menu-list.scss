@@ -1,0 +1,30 @@
+.menu-item-wrapper {
+    display: flex;
+    padding: 30px;
+    box-shadow: rgba(0, 0, 0, 0.12) 0px 1px 3px, rgba(0, 0, 0, 0.24) 0px 1px 2px;
+    margin-bottom: 24px;
+    gap: 24px;
+
+    .featured_img {
+        max-width: 300px;
+        img {
+            width: 100%;
+            object-fit: cover;
+        }
+    }
+
+    .details {
+        flex-grow: 1;
+    }
+    
+    .order-btn {
+        margin-top: 16px;
+        background-color: var(--e-global-color-primary);
+        color: white;
+        padding: 10px 20px;
+        display: inline-block;
+        &:hover {
+            color: #000;
+        }
+    }
+}

@@ -38,6 +38,15 @@ class Menu_Model extends Base_Model
             ->paginate($page, $limit);
     }
 
+    public static function get_menus_by_ids($ids): array
+    {
+        $arr_id = explode(',', $ids);
+        return self::find()
+            ->whereNull('deleted_at')
+            ->andWhere('IN', 'id', $arr_id)
+            ->all();
+    }
+
     public function get_dishes_menus()
     {
         return $this->hasMany(Dishes_Menu_Model::class, 'menu_id', 'id');
