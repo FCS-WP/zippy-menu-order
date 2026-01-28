@@ -1,116 +1,211 @@
-import React, { useState } from "react";
-
-// Hardcoded menu data
-const MENU_CATEGORIES = [
-  {
-    name: "SALAD",
-    items: [
-      { id: 1, name: "Potato Salad", price: 0 },
-      { id: 2, name: "Garden Salad", price: 0 },
-      { id: 3, name: "Caesar Salad", price: 0 },
-      { id: 4, name: "Thai Mango Salad", price: 0.5 },
-      { id: 5, name: "Tropical Fruits Salad", price: 0 },
-    ],
-  },
-  {
-    name: "SANDWICH",
-    items: [
-      { id: 6, name: "Egg Mayo", price: 0 },
-      { id: 7, name: "Tuna Mayo", price: 0 },
-      { id: 8, name: "Cheddar Cheese", price: 0 },
-      { id: 9, name: "Sardine", price: 0 },
-      { id: 10, name: "Veggie", price: 0 },
-    ],
-  },
-  {
-    name: "CAKES/PASTRY",
-    items: [
-      { id: 11, name: "Mini Custard Puff", price: 0 },
-      { id: 12, name: "Mini Chocolate Puff", price: 0 },
-      { id: 13, name: "Assorted Swiss Roll", price: 0 },
-      { id: 14, name: "Butter Cake Sliced", price: 0 },
-      { id: 15, name: "Marble Cake Sliced", price: 0 },
-      { id: 16, name: "Mini Chocolate Éclair", price: 0.5 },
-      { id: 17, name: "Mini Apple Strudel", price: 0.8 },
-      { id: 18, name: "Mini Egg Tart", price: 0.5 },
-    ],
-  },
-  {
-    name: "DEEP FRIED",
-    items: [
-      { id: 19, name: "Fish Ball", price: 0 },
-      { id: 20, name: "Crispy Golden Long Spring Roll", price: 0 },
-      { id: 21, name: "Sotong You Tiao", price: 0 },
-      { id: 22, name: "Breaded Scallop", price: 0 },
-      { id: 23, name: "Mini Curry Puff", price: 0 },
-      { id: 24, name: "Curry Samosa", price: 0 },
-      { id: 25, name: "Sotong Ball", price: 0 },
-    ],
-  },
-];
-
-const SELECTED_ITEM = {
-  name: "VALUE HIGH TEA - B",
-  price: 7.0,
-  image:
-    "https://web-staging.theshin.info/wp-content/uploads/2025/07/IMG_3425-768x1024.jpg", // Update with actual image path
-};
-
-// Generate time slots from 11:00 AM to 6:00 PM with 30-minute intervals
-const TIME_SLOTS = [];
-for (let hour = 11; hour <= 18; hour++) {
-  for (let minute = 0; minute < 60; minute += 30) {
-    if (hour === 18 && minute > 0) break; // Stop at 6:00 PM
-    const period = hour >= 12 ? "PM" : "AM";
-    const displayHour = hour > 12 ? hour - 12 : hour;
-    const time = `${displayHour}:${minute.toString().padStart(2, "0")} ${period}`;
-    TIME_SLOTS.push(time);
-  }
-}
+import React, { useEffect, useState } from "react";
+import { useFetchMenu } from "../../../hooks/useFetchMenus";
+import { useOrderFormProvider } from "../../../providers/OrderFormProvider";
+import { useFetchStore } from "../../../hooks/useFetchStore";
+import "react-datepicker/dist/react-datepicker.css";
+import DatePicker from "react-datepicker";
+import { format as formatDate } from "date-fns";
+import DishesMenus from "../../order-form/DishesMenus";
+import { data } from "autoprefixer";
 
 const OrderForm = () => {
   const menuId =
     new URLSearchParams(window.location.search).get("menu_id") || "";
+  const { menuData, storeData, updateState, ...data } = useOrderFormProvider();
+  const { currentMenu, fetchMenuDetail } = useFetchMenu();
+  const { operations, fetchOperations } = useFetchStore();
 
   const [selectedItems, setSelectedItems] = useState([]);
-  const [numberOfPax, setNumberOfPax] = useState(80);
-  const [deliveryDate, setDeliveryDate] = useState("");
+  const [selectedAddonsItems, setSelectedAddonsItems] = useState([]);
+  const [numberOfPax, setNumberOfPax] = useState(0);
+  const [deliveryDate, setDeliveryDate] = useState(null);
   const [deliveryTime, setDeliveryTime] = useState("");
+  const [excludeDates, setExcludeDates] = useState([]);
+  const [timeSlots, setTimeSlots] = useState([]);
+  const [orderStep, setOrderStep] = useState(1);
+  const [mainDishesMenu, setMainDishesMenu] = useState([]);
+  const [addonsDishesMenu, setAddonsDishesMenu] = useState([]);
 
-  const MINIMUM_PAX = 80;
-  const COURSES_REQUIRED = 5;
-  const GST_RATE = 0.09;
+  const COURSES_REQUIRED = parseInt(currentMenu?.dishes_qty);
+  const GST_RATE = currentMenu?.gst_rate
+    ? parseFloat(currentMenu?.gst_rate)
+    : 0;
 
-  const handleItemToggle = (itemId) => {
-    if (selectedItems.includes(itemId)) {
-      setSelectedItems(selectedItems.filter((id) => id !== itemId));
+  const handleItemToggle = (itemId, type = "main") => {
+    if (type == "main") {
+      if (selectedItems.includes(itemId)) {
+        setSelectedItems(selectedItems.filter((id) => id !== itemId));
+      } else {
+        if (selectedItems.length < COURSES_REQUIRED) {
+          setSelectedItems([...selectedItems, itemId]);
+        }
+      }
     } else {
-      if (selectedItems.length < COURSES_REQUIRED) {
-        setSelectedItems([...selectedItems, itemId]);
+      if (selectedAddonsItems.includes(itemId)) {
+        setSelectedAddonsItems(
+          selectedAddonsItems.filter((id) => id !== itemId),
+        );
+      } else {
+        setSelectedAddonsItems([...selectedAddonsItems, itemId]);
       }
     }
   };
 
   const handlePaxChange = (increment) => {
     const newPax = numberOfPax + increment;
-    if (newPax >= MINIMUM_PAX) {
+    if (newPax >= currentMenu.min_pax) {
       setNumberOfPax(newPax);
     }
   };
 
-  const calculatePrice = () => {
-    const basePrice = SELECTED_ITEM.price * numberOfPax;
-    const additionalPrice = selectedItems.reduce((total, itemId) => {
-      const item = MENU_CATEGORIES.flatMap((cat) => cat.items).find(
-        (i) => i.id === itemId,
-      );
-      return total + (item ? item.price * numberOfPax : 0);
+  const getTotalExtraPrices = (arr) => {
+    if (arr.length == 0) return 0;
+    const result = arr.reduce((total, itemId) => {
+      const item = currentMenu.dishes_menus
+        .flatMap((menu) => menu.dishes)
+        .find((i) => parseInt(i.id) === parseInt(itemId));
+      return total + (item ? parseFloat(item.extra_price) * numberOfPax : 0);
     }, 0);
-    return basePrice + additionalPrice;
+    return result;
+  };
+
+  const calculatePrice = () => {
+    if (!currentMenu) return 0;
+    const basePrice = parseFloat(currentMenu?.price) * numberOfPax;
+    const additionalPrice = getTotalExtraPrices(selectedItems);
+    const addonsExtraPrice = getTotalExtraPrices(selectedAddonsItems);
+
+    return basePrice + additionalPrice + addonsExtraPrice;
   };
 
   const price = calculatePrice();
   const totalWithGST = price * (1 + GST_RATE);
+
+  useEffect(() => {
+    fetchMenuDetail(menuId);
+    fetchOperations(1);
+  }, []);
+
+  useEffect(() => {
+    if (currentMenu) {
+      updateState({ menuData: currentMenu });
+      setNumberOfPax(parseInt(currentMenu.min_pax));
+      seprateMenusByType(currentMenu.dishes_menus);
+    }
+  }, [currentMenu]);
+
+  useEffect(() => {
+    if (operations) {
+      updateState({ operationsData: operations });
+    }
+    handleExcludeDate();
+  }, [operations]);
+
+  const handleExcludeDate = (date) => {
+    let excludes = [];
+    operations?.special_days?.map((item) => {
+      if (item.closed == true) {
+        excludes.push(new Date(item.date));
+      }
+    });
+    setExcludeDates(excludes);
+  };
+
+  const handleChooseDate = (date) => {
+    setDeliveryDate(date);
+    triggerHandleSlots(date);
+  };
+
+  const triggerHandleSlots = (date) => {
+    if (!operations || operations.days.length == 0) return;
+    const dateData = operations.days.find(
+      (item) => item.day == new Date(date).getDay(),
+    );
+    if (!dateData || !dateData.is_open) {
+      setTimeSlots([]);
+      return;
+    }
+    setTimeSlots(dateData.slots);
+  };
+
+  const isValidDate = (date) => {
+    if (!operations) return true;
+    const dateData = operations.days.find(
+      (item) => item.day == new Date(date).getDay(),
+    );
+
+    if (!dateData || !dateData.is_open) return false;
+    return true;
+  };
+
+  const handleNextStep = (step) => {
+    switch (step) {
+      case 1:
+        handleStep1();
+        break;
+      case 2:
+        handleStep2();
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleStep2 = async () => {
+    // add addons data to order -> send to add to cart.
+    console.log("Selected Item ");
+    const params = {
+      ...data.orderData,
+      addons_dishes: selectedAddonsItems,
+    }
+
+    updateState({orderData: params});
+    const submitOrderData = await orderApi.createCart();
+  };
+
+  const handleStep1 = () => {
+    if (!deliveryDate || !deliveryTime) {
+      window.alert("Missing delivery date or delivery time");
+      return;
+    }
+
+    if (selectedItems.length < COURSES_REQUIRED) {
+      window.alert(`Please select ${COURSES_REQUIRED} to continue!`);
+      return;
+    }
+
+    const orderData = {
+      delivery_date: formatDate(deliveryDate, "yyyy-MM-dd"),
+      deliveryTime: deliveryTime,
+      main_dishes: selectedItems,
+      num_pax: numberOfPax,
+    };
+
+    updateState({ orderData: orderData });
+    setOrderStep(2);
+  };
+
+  const seprateMenusByType = (items) => {
+    let addons = [];
+    let main = [];
+    items.map((item) => {
+      if (item.type == "main") {
+        main.push(item);
+      } else {
+        addons.push(item);
+      }
+    });
+
+    setAddonsDishesMenu(addons);
+    setMainDishesMenu(main);
+  };
+
+  if (!currentMenu)
+    return (
+      <>
+        <h5>Loading....</h5>
+      </>
+    );
 
   return (
     <div className="order-form-container">
@@ -121,12 +216,17 @@ const OrderForm = () => {
           <div className="delivery-section">
             <div className="form-group">
               <label className="form-label">DELIVERY DATE</label>
-              <input
-                type="date"
-                className="form-input"
-                value={deliveryDate}
-                onChange={(e) => setDeliveryDate(e.target.value)}
-              />
+              <div className="custom-date-picker">
+                <DatePicker
+                  placeholderText="Select date"
+                  selected={deliveryDate}
+                  disabled={orderStep == 2}
+                  minDate={new Date()}
+                  filterDate={isValidDate}
+                  excludeDates={excludeDates}
+                  onChange={handleChooseDate}
+                />
+              </div>
             </div>
 
             <div className="form-group">
@@ -134,12 +234,13 @@ const OrderForm = () => {
               <select
                 className="form-select"
                 value={deliveryTime}
+                disabled={orderStep == 2}
                 onChange={(e) => setDeliveryTime(e.target.value)}
               >
-                <option value="">hh:mm</option>
-                {TIME_SLOTS.map((time) => (
-                  <option key={time} value={time}>
-                    {time}
+                <option value="">Select time</option>
+                {timeSlots.map((time) => (
+                  <option key={time.id} value={time.id}>
+                    {time.start_time} - {time.end_time}
                   </option>
                 ))}
               </select>
@@ -151,13 +252,13 @@ const OrderForm = () => {
             <div className="selection-box">
               <h6 className="section-title">YOUR SELECTION</h6>
               <img
-                src={SELECTED_ITEM.image}
-                alt={SELECTED_ITEM.name}
+                src={currentMenu?.featured_img ?? ""}
+                alt={currentMenu?.name ?? ""}
                 className="selection-image"
               />
-              <div className="selection-name">{SELECTED_ITEM.name}</div>
+              <div className="selection-name">{currentMenu.name ?? ""}</div>
               <div className="selection-price">
-                ${SELECTED_ITEM.price.toFixed(2)} / PAX
+                ${parseFloat(currentMenu?.price).toFixed(2)} / PAX
               </div>
             </div>
           </div>
@@ -168,7 +269,8 @@ const OrderForm = () => {
               <span className="section-icon">📌</span> NUMBER OF PAX
             </h3>
             <div className="pax-info">
-              (Minimum {MINIMUM_PAX} Pax) | {COURSES_REQUIRED} courses
+              (Minimum {currentMenu.min_pax ?? 0} Pax) |{" "}
+              {currentMenu.dishes_qty ?? 0} courses
             </div>
             <div className="pax-controls">
               <button
@@ -181,8 +283,8 @@ const OrderForm = () => {
                 type="number"
                 value={numberOfPax}
                 onChange={(e) => {
-                  const val = parseInt(e.target.value) || MINIMUM_PAX;
-                  if (val >= MINIMUM_PAX) setNumberOfPax(val);
+                  const val = parseInt(e.target.value);
+                  if (val >= currentMenu.min_pax) setNumberOfPax(val);
                 }}
                 className="pax-input"
               />
@@ -213,41 +315,27 @@ const OrderForm = () => {
 
         {/* Right Side - Menu Items */}
         <div className="order-form-content">
-          <div className="menu-grid">
-            {MENU_CATEGORIES.map((category) => (
-              <div key={category.name} className="menu-category">
-                <h3 className="category-title">{category.name}</h3>
-                <div className="category-items">
-                  {category.items.map((item) => (
-                    <label key={item.id} className="menu-item">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(item.id)}
-                        onChange={() => handleItemToggle(item.id)}
-                        disabled={
-                          !selectedItems.includes(item.id) &&
-                          selectedItems.length >= COURSES_REQUIRED
-                        }
-                        className="menu-checkbox"
-                      />
-                      <span className="item-name">
-                        {item.name}
-                        {item.price > 0 && (
-                          <span className="item-price-extra">
-                            (+${item.price.toFixed(2)})
-                          </span>
-                        )}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
-            {/* Button next */}
-            <div className="form-actions">
-              <button className="btn-submit-order">Next</button>
-            </div>
-          </div>
+          {orderStep == 1 && (
+            <DishesMenus
+              data={mainDishesMenu}
+              selectedItems={selectedItems}
+              onSelect={handleItemToggle}
+              handleNextStep={() => handleNextStep(1)}
+              courses_required={COURSES_REQUIRED}
+              type="main"
+            />
+          )}
+          {orderStep == 2 && (
+            <>
+              <DishesMenus
+                data={addonsDishesMenu}
+                selectedItems={selectedAddonsItems}
+                onSelect={handleItemToggle}
+                handleNextStep={() => handleNextStep(2)}
+                type="addons"
+              />
+            </>
+          )}
         </div>
       </div>
     </div>

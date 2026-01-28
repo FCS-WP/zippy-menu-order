@@ -9,6 +9,7 @@ use ZIPPY_MENU_ORDER\App\Services\Stores\Store_Service;
 use ZIPPY_MENU_ORDER\App\Services\Stores\Store_Operation_Service;
 use ZIPPY_MENU_ORDER\App\Models\Stores\Store_Operation_Model;
 use ZIPPY_MENU_ORDER\App\Requests\Stores\Store_Operation_Request;
+use ZIPPY_MENU_ORDER\App\Services\Special_Days\Special_Days_Service;
 use ZIPPY_MENU_ORDER\Core\Config;
 
 class Store_Operation_Controller extends Base_Controller
@@ -71,9 +72,11 @@ class Store_Operation_Controller extends Base_Controller
         }
 
         $days = Store_Operation_Service::sortResponseData($days);
+        $specialDays = Special_Days_Service::get_all_special_days($storeId);
 
         return $this->success([
             'store_id' => $store->id,
+            'special_days' => $specialDays,
             'days'     => array_values($days)
         ]);
     }

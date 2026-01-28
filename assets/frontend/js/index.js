@@ -4,3 +4,4 @@
 
 // import "./pages/booking";
 import "./pages/order";
+import "./pages/menus";

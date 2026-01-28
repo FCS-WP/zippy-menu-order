@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { ToastContainer } from "react-toastify";
 import OrderForm from "../../components/pages/order/OrderForm";
+import { OrderFormProvider } from "../../providers/OrderFormProvider";
 
 // Zippy BookingCalendar
 document.addEventListener("DOMContentLoaded", function () {
@@ -18,10 +19,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
 const FrontendOrderForm = () => {
   return (
-    <div>
+    <OrderFormProvider>
       <OrderForm />
       <ToastContainer />
-    </div>
+    </OrderFormProvider>
   );
 };
 

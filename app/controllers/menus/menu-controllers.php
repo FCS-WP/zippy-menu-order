@@ -18,6 +18,13 @@ class Menu_Controllers extends Base_Controller
 		return $this->success($result, 200);
 	}
 
+	public function get_menus_with_ids(Menu_Request $request)
+	{
+		$validated = $request->all();
+		$result = Menu_Services::get_menus($validated);
+		return $this->success($result, 200);
+	}
+
 	public function show(Menu_Request $request)
 	{
 		try {
