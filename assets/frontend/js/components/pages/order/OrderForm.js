@@ -7,6 +7,8 @@ import DatePicker from "react-datepicker";
 import { format as formatDate } from "date-fns";
 import DishesMenus from "../../order-form/DishesMenus";
 import { data } from "autoprefixer";
+import { orderApi } from "../../../api";
+import { toast } from "react-toastify";
 
 const OrderForm = () => {
   const menuId =
@@ -25,6 +27,7 @@ const OrderForm = () => {
   const [orderStep, setOrderStep] = useState(1);
   const [mainDishesMenu, setMainDishesMenu] = useState([]);
   const [addonsDishesMenu, setAddonsDishesMenu] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const COURSES_REQUIRED = parseInt(currentMenu?.dishes_qty);
   const GST_RATE = currentMenu?.gst_rate
@@ -53,6 +56,7 @@ const OrderForm = () => {
 
   const handlePaxChange = (increment) => {
     const newPax = numberOfPax + increment;
+    console.log(newPax);
     if (newPax >= currentMenu.min_pax) {
       setNumberOfPax(newPax);
     }
@@ -151,16 +155,38 @@ const OrderForm = () => {
     }
   };
 
+  const triggerAddToCart = async (params) => {
+    const res = await orderApi.addToCart(params);
+    if (!res || res.status !== "success") {
+      return false;
+    }
+    toast.success("Menu added to cart!");
+    console.log(res);
+    return true;
+  };
+
   const handleStep2 = async () => {
     // add addons data to order -> send to add to cart.
-    console.log("Selected Item ");
+    setIsLoading(true);
     const params = {
       ...data.orderData,
-      addons_dishes: selectedAddonsItems,
-    }
+      addons_dishes_ids: selectedAddonsItems,
+      dish_ids: [...data.orderData.main_dishes_ids, ...selectedAddonsItems],
+      num_pax: numberOfPax,
+      menu_id: menuId,
+    };
 
-    updateState({orderData: params});
-    const submitOrderData = await orderApi.createCart();
+    updateState({ orderData: params });
+
+    const isAdded = await triggerAddToCart(params);
+    if (!isAdded) {
+      toast.error("Failed to add to cart!");
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(false);
+    window.location.href = "/cart";
+    return;
   };
 
   const handleStep1 = () => {
@@ -176,8 +202,8 @@ const OrderForm = () => {
 
     const orderData = {
       delivery_date: formatDate(deliveryDate, "yyyy-MM-dd"),
-      deliveryTime: deliveryTime,
-      main_dishes: selectedItems,
+      delivery_time: deliveryTime,
+      main_dishes_ids: selectedItems,
       num_pax: numberOfPax,
     };
 

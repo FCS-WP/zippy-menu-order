@@ -28,7 +28,7 @@ export const FEStoreApi = {
 };
 
 export const orderApi = {
-  async createCart(params) {
-    return await makeRequest("/stores", params);
+  async addToCart(params) {
+    return await makeRequest("/cart/add-to-cart", params, 'POST');
   },
 };

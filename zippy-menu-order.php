@@ -66,6 +66,7 @@ if (!defined('AUDIT_LOGS_TABLE')) {
 require_once ZIPPY_MENU_ORDER_DIR_PATH . '/vendor/autoload.php';
 require ZIPPY_MENU_ORDER_DIR_PATH . '/includes/autoload.php';
 require ZIPPY_MENU_ORDER_DIR_PATH . '/includes/constants.php';
+require ZIPPY_MENU_ORDER_DIR_PATH . '/src/hooks/custom-hooks.php';
 
 use ZIPPY_MENU_ORDER\Database\Migrations\Migration_Manager;
 use ZIPPY_MENU_ORDER\Routes\Init_Route;

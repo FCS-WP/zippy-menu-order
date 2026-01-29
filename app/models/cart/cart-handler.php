@@ -18,7 +18,7 @@ class Cart_Handler
         }
 
         add_filter('woocommerce_add_cart_item_data', [$this, 'add_cart_item_data'], 10, 2);
-        add_action('woocommerce_before_calculate_totals', [$this, 'apply_extra_price_to_cart'], 10, 1);
+        add_action('woocommerce_before_calculate_totals', [$this, 'apply_extra_price_to_cart']);
     }
 
     /**
@@ -34,7 +34,6 @@ class Cart_Handler
         if (empty($product_id)) {
             return false;
         }
-
         // Add product to cart
         $cart_item_key = WC()->cart->add_to_cart($product_id, $quantity, 0, [], $custom_data);
 
@@ -95,22 +94,16 @@ class Cart_Handler
      */
     public function apply_extra_price_to_cart()
     {
-        foreach ($this->get_cart_items() as $cart_item_key => $cart_item) {
-            // Check if extra_price is set in custom data
-            if (isset($cart_item['extra_price']) && !empty($cart_item['extra_price'])) {
-                $extra_price = floatval($cart_item['extra_price']);
-                $product = $cart_item['data'];
+        if (is_admin() && !defined('DOING_AJAX')) return;
 
-                // Get original price and add extra price
-                $original_price = floatval($product->get_regular_price());
-                $new_price = $original_price + $extra_price;
-
-                // Set new price
-                $product->set_price($new_price);
+        foreach ($this->get_cart_items() as $item) {
+            if (!empty($item['is_custom_menu'])) {
+                $price = $item['menu_data']['price'] ?? 0;
+                $item['data']->set_price($price);
             }
         }
     }
-
+ 
     /**
      * Get all items in the cart
      *

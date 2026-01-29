@@ -2,6 +2,7 @@
 
 namespace ZIPPY_MENU_ORDER\App\Models\Dishes;
 
+use ZIPPY_MENU_ORDER\App\Models\Menus\Dishes_Menu_Model;
 use ZIPPY_MENU_ORDER\Core\Base_Model;
 
 class Dishes_Model extends Base_Model
@@ -34,6 +35,12 @@ class Dishes_Model extends Base_Model
     }
 
 
+    public function get_dishes_menus()
+    {
+        return $this->hasOne(Dishes_Menu_Model::class, 'id', 'dishes_menu_id');
+    }
+
+
     public static function find_by_id($id): ?self
     {
         return self::find()
@@ -41,7 +48,7 @@ class Dishes_Model extends Base_Model
             ->one();
     }
 
-    public static function find_by_menu_id($id) 
+    public static function find_by_menu_id($id)
     {
         return self::find()
             ->where(['dishes_menu_id' => $id])

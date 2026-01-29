@@ -128,7 +128,7 @@ class Menu_Services
 
             $name = $infos['name'];
             $description = $infos['description'] ?? "";
-            $featured_img = $infos['featured_img'] ?? "";
+            $featured_img = $infos['featured_img'] ??  wc_placeholder_img_src();
             $min_pax = $infos['min_pax'] ?? 0;
             $max_pax = $infos['max_pax'] ?? 0;
             $name = $infos['name'];
