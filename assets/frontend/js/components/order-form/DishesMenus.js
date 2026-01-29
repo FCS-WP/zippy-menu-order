@@ -31,7 +31,9 @@ const DishesMenus = ({
           }
           break;
         case "addons":
-          flag = selectedItems.length >= parseInt(dishMenu.max_qty);
+          const conditionA1 = !selectedItems.includes(item.id);
+          const conditionA2 = thisBoxItems.length >= parseInt(dishMenu.max_qty);
+          flag = conditionA1 && conditionA2;
           break;
         default:
           break;
