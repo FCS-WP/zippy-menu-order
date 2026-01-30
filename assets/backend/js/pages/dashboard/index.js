@@ -16,7 +16,8 @@ const DashboardPage = () => {
   return (
     <>
       <DashboardProvider>
-        <ListBooking />
+        {/* <ListBooking /> */}
+        <h2>Welcome to Menu Order</h2>
         <ToastContainer />
       </DashboardProvider>
     </>

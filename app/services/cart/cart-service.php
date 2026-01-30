@@ -41,6 +41,8 @@ class Cart_Service
         WC()->session->set('zippy_delivery_time', $delivery_time);
         WC()->session->set('zippy_nums_of_pax', $nums_of_pax);
         // Add each dish to cart
+        $cart_handler->clear_cart();
+
         foreach ($dish_ids as $dish_id) {
             $dish = Dishes_Model::find_by_id($dish_id);
             if (empty($dish)) {
@@ -58,6 +60,7 @@ class Cart_Service
                     'dish_id' => $dish_id,
                     'dish_type' => $dish->dishes_menus->type,
                     'dishes_menu_id' => $dish->dishes_menus->id,
+                    'menu_id' => $menu_id
                 ]
             ];
 
@@ -80,7 +83,7 @@ class Cart_Service
                 [
                     'is_custom_menu' => true,
                     'menu_data' => [
-                        'menu_id' => $menu->id,
+                        'id' => $menu->id,
                         'name' => $menu->name,
                         'price' => $menu->price
                     ],

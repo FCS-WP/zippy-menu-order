@@ -39,3 +39,8 @@ if (!defined('STORES_OPERATION_TABLE')) {
 if (!defined('SPECIAL_DAYS_TABLE')) {
   define('SPECIAL_DAYS_TABLE', 'special_days');
 }
+
+if (!defined('STORE_ID')) {
+  define('STORE_ID', 1);
+}
+
