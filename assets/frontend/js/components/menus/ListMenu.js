@@ -10,13 +10,13 @@ const ListMenu = () => {
   const { menus, fetchMenus } = useFetchMenu();
 
   useEffect(() => {
-    fetchMenus({ids: ids});
+    fetchMenus({ ids: ids });
   }, []);
 
   return (
     <div>
       {menus.map((menu) => (
-        <ListMenuItem menu={menu} />
+        <ListMenuItem key={menu.id} menu={menu} />
       ))}
     </div>
   );

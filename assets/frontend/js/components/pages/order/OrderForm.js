@@ -9,6 +9,7 @@ import DishesMenus from "../../order-form/DishesMenus";
 import { data } from "autoprefixer";
 import { orderApi } from "../../../api";
 import { toast } from "react-toastify";
+import { validateMenuSelection } from "../../../helpers/order-helpers";
 
 const OrderForm = () => {
   const menuId =
@@ -56,7 +57,6 @@ const OrderForm = () => {
 
   const handlePaxChange = (increment) => {
     const newPax = numberOfPax + increment;
-    console.log(newPax);
     if (newPax >= currentMenu.min_pax) {
       setNumberOfPax(newPax);
     }
@@ -161,17 +161,17 @@ const OrderForm = () => {
       return false;
     }
     toast.success("Menu added to cart!");
-    console.log(res);
     return true;
   };
 
   const handleStep2 = async () => {
     // add addons data to order -> send to add to cart.
     setIsLoading(true);
+
     const params = {
-      ...data.orderData,
-      addons_dishes_ids: selectedAddonsItems,
-      dish_ids: [...data.orderData.main_dishes_ids, ...selectedAddonsItems],
+      delivery_date: formatDate(deliveryDate, "yyyy-MM-dd"),
+      delivery_time: deliveryTime,
+      dish_ids: [...selectedItems, ...selectedAddonsItems],
       num_pax: numberOfPax,
       menu_id: menuId,
     };
@@ -200,6 +200,12 @@ const OrderForm = () => {
       return;
     }
 
+    const validation = validateMenuSelection(mainDishesMenu, selectedItems);
+    if (!validation.valid) {
+      window.alert(validation.errors.join("\n"));
+      return;
+    }
+
     const orderData = {
       delivery_date: formatDate(deliveryDate, "yyyy-MM-dd"),
       delivery_time: deliveryTime,
@@ -208,7 +214,12 @@ const OrderForm = () => {
     };
 
     updateState({ orderData: orderData });
-    setOrderStep(2);
+    if (addonsDishesMenu.length > 0) {
+      setOrderStep(2);
+      return;
+    } else {
+      handleStep2();
+    }
   };
 
   const seprateMenusByType = (items) => {
@@ -348,6 +359,7 @@ const OrderForm = () => {
               onSelect={handleItemToggle}
               handleNextStep={() => handleNextStep(1)}
               courses_required={COURSES_REQUIRED}
+              loading={isLoading}
               type="main"
             />
           )}
@@ -358,6 +370,7 @@ const OrderForm = () => {
                 selectedItems={selectedAddonsItems}
                 onSelect={handleItemToggle}
                 handleNextStep={() => handleNextStep(2)}
+                loading={isLoading}
                 type="addons"
               />
             </>

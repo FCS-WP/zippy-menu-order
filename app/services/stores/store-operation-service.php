@@ -128,4 +128,33 @@ class Store_Operation_Service
 
         return true;
     }
+
+    public static function get_display_time_by_slot_id($store_id, $delivery_date, $slot_id)
+    {
+        if (empty($store_id) || empty($delivery_date) || empty($slot_id)) {
+            return null;
+        }
+
+        try {
+            // Get weekday index (0 = Sunday, 6 = Saturday)
+            $delivery_day = date('w', strtotime($delivery_date));
+
+            $slot = (new Store_Operation_Model())->find_time_slot_by_slot_id($store_id, $delivery_day, $slot_id);
+            if (!$slot) {
+                return null;
+            }
+
+            // Adjust format if needed
+            $start = date('g:i A', strtotime($slot->open_time));
+            $end   = date('g:i A', strtotime($slot->end_time));
+
+            if (!$start || !$end) {
+                return null;
+            }
+
+            return $start . ' - ' . $end;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 }

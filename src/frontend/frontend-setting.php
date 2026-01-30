@@ -36,7 +36,7 @@ class FrontEnd_Setting
     function menu_order_list($atts)
     {
         $atts = shortcode_atts(array(
-            'menu_ids' => '1, 2, 3, 5',
+            'menu_ids' => '',
         ), $atts, 'bartag');
 
         return '<div id="menu_order_list" data-menu_ids="' . $atts['menu_ids'] . '"></div>';

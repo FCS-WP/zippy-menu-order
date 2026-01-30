@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import Button from "../common/button/Button";
 
 const DishesMenus = ({
   data,
   onSelect,
+  loading = false,
   selectedItems,
   handleNextStep,
   type = "main",
@@ -22,7 +24,7 @@ const DishesMenus = ({
         case "main":
           const condition1 = !selectedItems.includes(item.id);
           const condition2 = selectedItems.length >= courses_required;
-          if (dishMenu?.max_qty) {
+          if (dishMenu?.max_qty && parseInt(dishMenu.max_qty) > 0) {
             const condition3 =
               thisBoxItems.length >= parseInt(dishMenu.max_qty);
             flag = (condition1 && condition2) || (condition1 && condition3);
@@ -32,8 +34,13 @@ const DishesMenus = ({
           break;
         case "addons":
           const conditionA1 = !selectedItems.includes(item.id);
-          const conditionA2 = thisBoxItems.length >= parseInt(dishMenu.max_qty);
-          flag = conditionA1 && conditionA2;
+          if (dishMenu?.max_qty && parseInt(dishMenu.max_qty) > 0) {
+            const conditionA2 =
+              thisBoxItems.length >= parseInt(dishMenu.max_qty);
+            flag = conditionA1 && conditionA2;
+            break;
+          }
+          flag = conditionA1;
           break;
         default:
           break;
@@ -81,9 +88,13 @@ const DishesMenus = ({
         ))}
       {/* Button next */}
       <div className="form-actions">
-        <button className="btn-submit-order" onClick={() => handleNextStep(2)}>
+        <Button
+          isLoading={loading}
+          className="btn-submit-order rounded-0"
+          onClick={() => handleNextStep(2)}
+        >
           Next
-        </button>
+        </Button>
       </div>
     </div>
   );
