@@ -28,7 +28,7 @@ add_filter('woocommerce_cart_item_name', function ($name, $cart_item) {
 
 
 add_filter('woocommerce_order_item_name', function ($name, $item, $is_visible) {
-    if ($item->get_meta('is_custom_menu')) {
+    if ($item->get_meta('_is_custom_menu')) {
         $menu_data = $item->get_meta('menu_data');
         if (!empty($menu_data['name'])) {
             $name = esc_html($menu_data['name']);
@@ -39,7 +39,8 @@ add_filter('woocommerce_order_item_name', function ($name, $item, $is_visible) {
 
 add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart_item_key, $values) {
     if (!empty($values['is_custom_menu'])) {
-        $item->add_meta_data('is_custom_menu', true, true);
+        $item->add_meta_data('_is_custom_menu', true, true);
+        $item->add_meta_data('menu_data', $values['menu_data'], true);
     }
 
     if (!empty($values['is_dish_item'])) {
