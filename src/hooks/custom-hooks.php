@@ -6,6 +6,7 @@
  */
 
 use ZIPPY_MENU_ORDER\App\Models\Menus\Menu_Model;
+use ZIPPY_MENU_ORDER\App\Models\Stores\Store_Model;
 use ZIPPY_MENU_ORDER\App\Services\Stores\Store_Operation_Service;
 
 add_filter('woocommerce_cart_item_permalink', function ($link, $cart_item) {
@@ -185,6 +186,7 @@ add_action('woocommerce_email_after_order_table', function ($order) {
 
 add_action('woocommerce_checkout_create_order', function ($order, $data) {
     $delivery_date = WC()->session->get('zippy_delivery_date');
+    $store_id = WC()->session->get('selected_store');
     $delivery_time_id = WC()->session->get('zippy_delivery_time');
     $delivery_time = Store_Operation_Service::get_display_time_by_slot_id(STORE_ID, $delivery_date, $delivery_time_id) ?? $delivery_time_id;
 
@@ -195,15 +197,26 @@ add_action('woocommerce_checkout_create_order', function ($order, $data) {
     if ($delivery_time) {
         $order->update_meta_data('_delivery_time', $delivery_time);
     }
+    if ($delivery_time) {
+        $order->update_meta_data('_delivery_time', $delivery_time);
+    }
     if ($nums_of_pax) {
         $order->update_meta_data('_nums_of_pax', $nums_of_pax);
+    }
+    if ($store_id) {
+        $store = Store_Model::find_by_id($store_id);
+        $order->update_meta_data('_selected_store', $store->name);
     }
 }, 10, 2);
 
 add_action('woocommerce_checkout_order_processed', function () {
+    // For menu order
     WC()->session->__unset('zippy_delivery_date');
     WC()->session->__unset('zippy_delivery_time');
     WC()->session->__unset('zippy_nums_of_pax');
+
+    // For normal order: 
+    WC()->session->__unset('selected_store');
 });
 
 /**
@@ -215,8 +228,14 @@ add_action('woocommerce_admin_order_data_after_shipping_address', function ($ord
         . esc_html($order->get_meta('_delivery_date')) . '</p>';
     echo '<p><strong>Delivery Time:</strong> '
         . esc_html($order->get_meta('_delivery_time')) . '</p>';
-    echo '<p><strong>Number of Pax:</strong> '
-        . esc_html($order->get_meta('_nums_of_pax')) . '</p>';
+    if ($order->get_meta('_nums_of_pax')) {
+        echo '<p><strong>Number of Pax:</strong> '
+            . esc_html($order->get_meta('_nums_of_pax')) . '</p>';
+    }
+    if ($order->get_meta('_selected_store')) {
+        echo '<p><strong>Number of Pax:</strong> '
+            . esc_html($order->get_meta('_selected_store')) . '</p>';
+    }
 });
 
 /**
@@ -228,6 +247,7 @@ add_action('woocommerce_thankyou', function ($order_id) {
     $order = wc_get_order($order_id);
     $delivery_date = $order->get_meta('_delivery_date');
     $delivery_time = $order->get_meta('_delivery_time');
+    $selected_store = $order->get_meta('_selected_store');
     $nums_of_pax   = $order->get_meta('_nums_of_pax');
 
     if (!$delivery_date && !$delivery_time) return;
@@ -239,6 +259,9 @@ add_action('woocommerce_thankyou', function ($order_id) {
     }
     if ($delivery_time) {
         echo '<p><strong>Time:</strong> ' . esc_html($delivery_time) . '</p>';
+    }
+    if ($selected_store) {
+        echo '<p><strong>Store:</strong> ' . esc_html($selected_store) . '</p>';
     }
     if ($nums_of_pax) {
         echo '<p><strong>Number of Pax:</strong> ' . esc_html($nums_of_pax) . '</p>';
@@ -253,6 +276,7 @@ add_action('woocommerce_email_order_meta', function ($order, $sent_to_admin, $pl
 
     $delivery_date = $order->get_meta('_delivery_date');
     $delivery_time = $order->get_meta('_delivery_time');
+    $selected_store = $order->get_meta('_selected_store');
     $nums_of_pax   = $order->get_meta('_nums_of_pax');
 
     if (!$delivery_date && !$delivery_time && !$nums_of_pax) {
@@ -267,6 +291,9 @@ add_action('woocommerce_email_order_meta', function ($order, $sent_to_admin, $pl
         }
         if ($delivery_time) {
             echo "Time Slot: " . $delivery_time . "\n";
+        }
+        if ($selected_store) {
+            echo "Store: " . $selected_store . "\n";
         }
         if ($nums_of_pax) {
             echo "Pax: " . $nums_of_pax . "\n";
@@ -364,3 +391,27 @@ add_filter('woocommerce_hidden_order_itemmeta', function ($hidden_meta_keys) {
     $hidden_meta_keys[] = 'menu_data';
     return $hidden_meta_keys;
 });
+
+
+/**
+ * Clear product-category cache
+ */
+function clear_products_categories_cache()
+{
+    delete_transient('custom_products_categories_v1');
+}
+
+// When product is saved
+add_action('save_post_product', 'clear_products_categories_cache');
+
+// When product deleted
+add_action('deleted_post', function ($post_id) {
+    if (get_post_type($post_id) === 'product') {
+        clear_products_categories_cache();
+    }
+});
+
+// When category edited
+add_action('edited_product_cat', 'clear_products_categories_cache');
+add_action('created_product_cat', 'clear_products_categories_cache');
+add_action('delete_product_cat', 'clear_products_categories_cache');

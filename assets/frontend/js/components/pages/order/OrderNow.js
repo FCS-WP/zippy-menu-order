@@ -1,114 +1,29 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useFetchStore } from "../../../hooks/useFetchStore";
+import { useFetchProducts } from "../../../hooks/useFetchProducts";
+import { useOrderNowProvider } from "../../../providers/OrderNowProvider";
+import Button from "../../common/button/Button";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCartShopping,
+  faCheck,
+  faMinus,
+  faPlus,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import ProductBox from "../../order-form/ProductBox";
+import CartItems from "../../order-form/CartItems";
 
 const OrderNow = () => {
   const store_id =
     new URLSearchParams(window.location.search).get("store_id") || "";
 
-  const { operations, fetchOperations } = useFetchStore();
-
+  const { operations, fetchOperations, saveStoreSession } = useFetchStore();
   const [activeCategory, setActiveCategory] = useState(null);
-
+  const { categories, cart } = useOrderNowProvider();
+ 
   // 🔥 refs map
   const sectionRefs = useRef({});
-
-  const placeholderImg =
-    window.location.origin +
-    "/wp-content/plugins/woocommerce/assets/images/placeholder.png";
-
-  const categories = [
-    {
-      id: 123,
-      name: "Category 1",
-      products: [
-        {
-          id: 999,
-          name: "Product 1",
-          price: 22,
-          stock: 123,
-          img: placeholderImg,
-          description: "Delicious handmade dish made with fresh ingredients.",
-        },
-        {
-          id: 991,
-          name: "Product 2",
-          price: 33,
-          stock: 123,
-          img: placeholderImg,
-          description: "Chef's special recipe served hot and fresh.",
-        },
-        {
-          id: 992,
-          name: "Product 3",
-          price: 44,
-          stock: 123,
-          img: placeholderImg,
-          description: "Customer favorite with premium quality taste.",
-        },
-      ],
-    },
-    {
-      id: 234,
-      name: "Category 2",
-      products: [
-        {
-          id: 888,
-          name: "Sample 1",
-          price: 20,
-          stock: 123,
-          img: placeholderImg,
-          description: "A perfect choice for quick and satisfying meal.",
-        },
-        {
-          id: 881,
-          name: "Sample 2",
-          price: 40,
-          stock: 123,
-          img: placeholderImg,
-          description: "Balanced flavors crafted carefully.",
-        },
-        {
-          id: 882,
-          name: "Sample 3",
-          price: 50,
-          stock: 123,
-          img: placeholderImg,
-          description: "Premium ingredients for premium experience.",
-        },
-      ],
-    },
-    {
-      id: 7676,
-      name: "Category 3",
-      products: [
-        {
-          id: 222,
-          name: "QQQ 1",
-          price: 20,
-          stock: 123,
-          img: placeholderImg,
-          description: "Light and refreshing dish for any time.",
-        },
-        {
-          id: 221,
-          name: "QQQQ 2",
-          price: 40,
-          stock: 123,
-          img: placeholderImg,
-          description: "Popular choice among returning customers.",
-        },
-        {
-          id: 223,
-          name: "QQQQ 3",
-          price: 50,
-          stock: 123,
-          img: placeholderImg,
-          description: "Perfect combination of taste and presentation.",
-        },
-      ],
-    },
-  ];
-
   // 🔥 Scroll handler
   const handleClickCategory = (id) => {
     setActiveCategory(id);
@@ -125,6 +40,7 @@ const OrderNow = () => {
 
   useEffect(() => {
     fetchOperations(store_id);
+    saveStoreSession({store_id: store_id});
   }, [store_id]);
 
   useEffect(() => {
@@ -133,21 +49,31 @@ const OrderNow = () => {
     }
   }, []);
 
+  const handleGoToCheckout = () => {
+    window.location.href = window.location.origin + '/checkout';
+  };
+
+  if (categories.length == 0) return;
+
   return (
     <div className="order-now-layout">
       {/* Categories */}
       <div className="order-now-categories">
         <h4>Categories</h4>
         <div className="category-list">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              className={`cat-btn ${activeCategory === cat.id ? "active" : ""}`}
-              onClick={() => handleClickCategory(cat.id)}
-            >
-              {cat.name}
-            </button>
-          ))}
+          {categories.length > 0 &&
+            categories.map((cat) => {
+              if (cat.products.length <= 0) return;
+              return (
+                <button
+                  key={cat.id}
+                  className={`cat-btn ${activeCategory === cat.id ? "active" : ""}`}
+                  onClick={() => handleClickCategory(cat.id)}
+                >
+                  {cat.name}
+                </button>
+              );
+            })}
         </div>
       </div>
 
@@ -155,53 +81,53 @@ const OrderNow = () => {
       <div className="order-now-products">
         <h4>Dishes</h4>
 
-        {categories.map((cat) => (
-          <div
-            key={"box-" + cat.id}
-            className="products-box"
-            ref={(el) => (sectionRefs.current[cat.id] = el)}
-          >
-            <div className="products-box__title">{cat.name}</div>
+        {categories.length > 0 &&
+          categories.map((cat) => {
+            if (cat.products.length <= 0) return;
+            return (
+              <div
+                key={"box-" + cat.id}
+                className="products-box"
+                ref={(el) => (sectionRefs.current[cat.id] = el)}
+              >
+                <div className="products-box__title">{cat.name}</div>
 
-            <div className="products-box__list">
-              {cat.products.map((product) => (
-                <div className="product-box" key={product.id}>
-                  <div className="featured-img">
-                    <img src={product?.img ?? ""} alt="" />
-                  </div>
-
-                  <div className="product-infos">
-                    <h6 className="product-name">{product.name}</h6>
-                    <h5 className="product-price">${product.price}</h5>
-                  </div>
-
-                  <div className="product-action">
-                    <button
-                      className="custom-add-to-cart"
-                      data-product_id={product.id}
-                    >
-                      Add
-                    </button>
-                  </div>
+                <div className="products-box__list">
+                  {cat.products.map((product) => (
+                    <ProductBox key={product.id} product={product} />
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
+              </div>
+            );
+          })}
       </div>
 
       {/* Cart */}
       <div className="order-now-cart">
         <h4>Order Summary</h4>
+
         <div className="cart-items">
+          {cart?.items?.length > 0 ? (
+            <CartItems items={cart?.items} />
+          ) : (
+            <div className="cart-item">Empty Cart</div>
+          )}
+        </div>
+        {cart?.total && (
           <div className="sub-total">
             <span>Subtotal:</span>
-            <span>$99.99</span>
+            <span>${Number(cart?.total.subtotal).toFixed(2)}</span>
           </div>
-        </div>
+        )}
 
         <div className="flex-center mt-default">
-          <button>Process to checkout</button>
+          <Button
+            className="process-to-checkout-btn"
+            onClick={handleGoToCheckout}
+            disabled={!(cart?.items?.length > 0)}
+          >
+            Process to checkout
+          </Button>
         </div>
       </div>
     </div>

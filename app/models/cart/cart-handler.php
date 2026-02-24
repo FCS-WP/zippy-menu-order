@@ -114,6 +114,17 @@ class Cart_Handler
         return WC()->cart->get_cart();
     }
 
+    public function get_cart_item_by_key($cart_item_key)
+    {
+        $items = $this->get_cart_items();
+
+        if (isset($items[$cart_item_key])) {
+            return $items[$cart_item_key];
+        }
+
+        return false;
+    }
+
     public function get_cart_totals()
     {
         $this->calculate_totals();

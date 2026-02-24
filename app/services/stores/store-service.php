@@ -2,6 +2,7 @@
 
 namespace ZIPPY_MENU_ORDER\App\Services\Stores;
 
+use ZIPPY_MENU_ORDER\App\Models\Cart\Cart_Handler;
 use ZIPPY_MENU_ORDER\App\Models\Products_Booking\Products_Booking_Model;
 use ZIPPY_MENU_ORDER\App\Models\Stores\Store_Model;
 
@@ -113,5 +114,24 @@ class Store_Service
         }
 
         return $data;
+    }
+
+    public static function save_session($store_id) {
+        $store = Store_Model::find_by_id($store_id);
+        if (!$store) {
+           return [
+                'success' => false,
+                'message' => 'Store not found',
+            ];
+        }
+        $cart_handler = new Cart_Handler();
+
+        WC()->session->set('selected_store', $store_id);
+        WC()->session->save_data();
+
+        return [
+            'message' => 'saved session!',
+            'store' => $store->name,
+        ];
     }
 }

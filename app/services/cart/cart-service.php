@@ -5,6 +5,7 @@ namespace ZIPPY_MENU_ORDER\App\Services\Cart;
 use ZIPPY_MENU_ORDER\App\Models\Cart\Cart_Handler;
 use ZIPPY_MENU_ORDER\App\Models\Dishes\Dishes_Model;
 use ZIPPY_MENU_ORDER\App\Models\Menus\Menu_Model;
+use ZIPPY_MENU_ORDER\App\Models\Stores\Store_Model;
 
 class Cart_Service
 {
@@ -74,7 +75,7 @@ class Cart_Service
             }
         }
         // Add product menu to cart
-        $product_menu_id =self::zippy_get_menu_product_id();
+        $product_menu_id = self::zippy_get_menu_product_id();
 
         if ($product_menu_id) {
             $menu_product_key = $cart_handler->add_to_cart(
@@ -90,7 +91,7 @@ class Cart_Service
                     'unique_key' => md5(microtime())
                 ]
             );
-            
+
             if (empty($menu_product_key)) {
                 return [
                     'success' => false,
@@ -112,6 +113,164 @@ class Cart_Service
                 'nums_of_pax' => $nums_of_pax,
             ],
         ];
+    }
+
+    public static function normal_add_to_cart($data)
+    {
+        // Validate store
+        $store_id = $data['store_id'] ?? 0;
+        $store = Store_Model::find_by_id($store_id);
+
+        if (!$store) {
+            return [
+                'success' => false,
+                'message' => 'store not found',
+            ];
+        }
+
+        $product_id = $data['product_id'] ?? null;
+        $product = wc_get_product($product_id);
+
+        if (!$product) {
+            return null;
+        }
+
+        $cart_handler = new Cart_Handler();
+        $cart_item_key = $cart_handler->add_to_cart($product_id);
+
+        WC()->cart->calculate_totals();
+        WC()->session->save_data();
+
+        $items = [];
+        foreach ($cart_handler->get_cart_items() as $key => $item) {
+
+            $product = $item['data'];
+            $items[] = [
+                'key'        => $key,
+                'product_id' => $item['product_id'],
+                'name'       => $product->get_name(),
+                'price'      => wc_price($product->get_price()),
+                'quantity'   => $item['quantity'],
+                'subtotal'   => $item['line_total'],
+            ];
+        }
+
+
+        return [
+            'message' => !empty($cart_item_key) ? 'Item added to cart successfully' : 'Failed to add item to cart',
+            'cart_data' => [
+                'items' => $items,
+                'total' => $cart_handler->get_cart_totals(),
+            ]
+        ];
+    }
+
+    public static function get_cart()
+    {
+        try {
+            $cart_handler = new Cart_Handler();
+            $items = [];
+            foreach ($cart_handler->get_cart_items() as $key => $item) {
+
+                $product = $item['data'];
+                $items[] = [
+                    'key'        => $key,
+                    'product_id' => $item['product_id'],
+                    'name'       => $product->get_name(),
+                    'price'      => wc_price($product->get_price()),
+                    'quantity'   => $item['quantity'],
+                    'subtotal'   => $item['line_total'],
+                ];
+            }
+
+            $cart_data = [
+                'items' => $items,
+                'total' => $cart_handler->get_cart_totals(),
+            ];
+
+            return [
+                'cart_data' => $cart_data,
+                'message' => 'get cart successfully!',
+            ];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public static function update_qty($data)
+    {
+        try {
+            $cart_handler = new Cart_Handler();
+            $cart_item_key = $data['cart_item_key'] ?? null;
+            $new_qty = $data['new_qty'] ?? 0;
+            $cart_item = $cart_handler->get_cart_item_by_key($cart_item_key);
+
+            if (!$cart_item) {
+                return [
+                    'success' => false,
+                    'message' => 'Cart item not found',
+                ];
+            }
+
+            $updated = null;
+
+            if ($new_qty <= 0) {
+                $updated = $cart_handler->remove_cart_item($cart_item_key);
+            } else {
+                $updated = $cart_handler->update_cart_item($cart_item_key, $new_qty);
+            }
+
+            return [
+                'updated' => $updated,
+                'message' => 'update cart successfully!',
+            ];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
+
+    public static function remove_item($data)
+    {
+        try {
+            $cart_handler = new Cart_Handler();
+            $cart_item_key = $data['cart_item_key'] ?? null;
+            $cart_item = $cart_handler->get_cart_item_by_key($cart_item_key);
+
+            if (!$cart_item) {
+                return [
+                    'success' => false,
+                    'message' => 'Cart item not found',
+                ];
+            }
+
+            $removed = $cart_handler->remove_cart_item($cart_item_key);
+
+            WC()->cart->calculate_totals();
+            WC()->session->save_data();
+
+            $items = [];
+            foreach ($cart_handler->get_cart_items() as $key => $item) {
+                $product = $item['data'];
+                $items[] = [
+                    'key'        => $key,
+                    'product_id' => $item['product_id'],
+                    'name'       => $product->get_name(),
+                    'price'      => wc_price($product->get_price()),
+                    'quantity'   => $item['quantity'],
+                    'subtotal'   => $item['line_total'],
+                ];
+            }
+
+            return [
+                'message' => !empty($removed) ? 'Item has been removed' : 'Failed to remove item',
+                'cart_data' => [
+                    'items' => $items,
+                    'total' => $cart_handler->get_cart_totals(),
+                ]
+            ];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
     }
 
     public static function zippy_get_menu_product_id()

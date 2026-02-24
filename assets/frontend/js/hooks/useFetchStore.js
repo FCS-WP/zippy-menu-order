@@ -41,6 +41,23 @@ export const useFetchStore = () => {
     }
   }, []);
 
+  const saveStoreSession = async (params) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await FEStoreApi.saveSession(params);
+
+      if (data?.status === "success") {
+        setOperations(data.data || []);
+      }
+    } catch (err) {
+      console.error("Error fetching operations:", err);
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     store,
     operations,
@@ -48,5 +65,6 @@ export const useFetchStore = () => {
     error,
     fetchOperations,
     fetchStore,
+    saveStoreSession
   };
 };

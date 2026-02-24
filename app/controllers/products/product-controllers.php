@@ -85,4 +85,14 @@ class Product_Controllers extends Base_Controller
 			return $this->error($e->getMessage());
 		}
 	}
+
+	public function get_products_and_categories(Product_Request $request)
+	{
+		try {
+			$categories = Product_Services::get_products_and_categories();
+			return $this->success($categories);
+		} catch (\Exception $e) {
+			return $this->error($e->getMessage());
+		}
+	}
 }

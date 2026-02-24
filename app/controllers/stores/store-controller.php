@@ -22,7 +22,7 @@ class Store_Controller extends Base_Controller
         try {
             $validated = $request->all();
 
-            $limit = isset($validated['limit']) ? intval($validated['limit']) : 2;
+            $limit = isset($validated['limit']) ? intval($validated['limit']) : 10;
             $page = isset($validated['page']) ? intval($validated['page']) : 1;
 
             $stores = $this->model::get_stores($page, $limit);
@@ -102,6 +102,7 @@ class Store_Controller extends Base_Controller
         // prepare update data
         $update_data = [
             'duration' => $validated['duration'] ? intval($validated['duration']) : null,
+            'name' => sanitize_text_field($validated['name'] ?? ""),
             'phone' => sanitize_text_field($validated['phone'] ?? ""),
             'postal_code' => sanitize_text_field($validated['postal_code'] ?? null),
             'coordinate' => $validated['coordinate'] ?? "",
@@ -174,6 +175,17 @@ class Store_Controller extends Base_Controller
     {
         $validated = $request->all();
         $data = Store_Service::get_all_stores($validated["product_id"]);
+        if (empty($data)) {
+            return $this->error($this->messages['not_found']);
+        }
+
+        return $this->success($data);
+    }
+
+    public function save_store_session(Store_Request $request)
+    {
+        $validated = $request->all();
+        $data = Store_Service::save_session($validated["store_id"]);
         if (empty($data)) {
             return $this->error($this->messages['not_found']);
         }
