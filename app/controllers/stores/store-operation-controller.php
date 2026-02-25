@@ -72,7 +72,7 @@ class Store_Operation_Controller extends Base_Controller
         }
 
         $days = Store_Operation_Service::sortResponseData($days);
-        $specialDays = Special_Days_Service::get_all_special_days($storeId);
+        $specialDays = Special_Days_Service::get_all_special_days($store->id);
 
         return $this->success([
             'store_id' => $store->id,

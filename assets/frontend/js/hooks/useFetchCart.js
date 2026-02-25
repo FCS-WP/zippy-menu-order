@@ -57,12 +57,30 @@ export const useFetchCart = () => {
     }
   };
 
+   const updateItemQty = async (params) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await FECartApi.updateCartItemQty(params);
+      if (data?.status === "success") {
+        return data.data;
+      }
+    } catch (err) {
+      console.error("Error remove item from cart:", err);
+      setError(err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     cart,
     loading,
     error,
     fetchCart,
     addProductToCart,
+    updateItemQty,
     removeItemFromCart,
   };
 };

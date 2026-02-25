@@ -165,7 +165,7 @@ class Cart_Service
         ];
     }
 
-    public static function get_cart()
+    public static function get_cart_data()
     {
         try {
             $cart_handler = new Cart_Handler();
@@ -183,11 +183,19 @@ class Cart_Service
                 ];
             }
 
-            $cart_data = [
+            return [
                 'items' => $items,
                 'total' => $cart_handler->get_cart_totals(),
             ];
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
 
+    public static function get_cart()
+    {
+        try {
+            $cart_data = self::get_cart_data();
             return [
                 'cart_data' => $cart_data,
                 'message' => 'get cart successfully!',
@@ -212,16 +220,14 @@ class Cart_Service
                 ];
             }
 
-            $updated = null;
-
             if ($new_qty <= 0) {
-                $updated = $cart_handler->remove_cart_item($cart_item_key);
+                $cart_handler->remove_cart_item($cart_item_key);
             } else {
-                $updated = $cart_handler->update_cart_item($cart_item_key, $new_qty);
+                $cart_handler->update_cart_item($cart_item_key, $new_qty);
             }
 
             return [
-                'updated' => $updated,
+                'cart_data' => self::get_cart_data(),
                 'message' => 'update cart successfully!',
             ];
         } catch (\Throwable $th) {

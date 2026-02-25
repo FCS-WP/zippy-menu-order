@@ -10,8 +10,9 @@ class Store_Service
 {
     public static function checkStoreExist($id)
     {
+        $store_id = $id && $id !== 0 ? $id : WC()->session->get('selected_store');
         $store = Store_Model::find()
-            ->where(['id' => $id])
+            ->where(['id' => $store_id])
             ->WhereNull('deleted_at')
             ->andWhere(['active' => 1])
             ->one();
@@ -134,4 +135,33 @@ class Store_Service
             'store' => $store->name,
         ];
     }
+
+     public static function show_store($store_id) {
+        $id = null;
+        if (!$store_id || $store_id == 0) {
+            $cart_handler = new Cart_Handler();
+            $id = WC()->session->get('selected_store');
+        } else {
+            $id = $store_id;
+        }
+
+        if (!$id) {
+            return [
+                'success' => false,
+                'message' => 'Store_id not found',
+            ];
+        }
+
+        $store = Store_Model::find_by_id($store_id);
+        
+        if (!$store) {
+           return [
+                'success' => false,
+                'message' => 'Store not found',
+            ];
+        }
+      
+        return $store->toArray();
+    }
+
 }

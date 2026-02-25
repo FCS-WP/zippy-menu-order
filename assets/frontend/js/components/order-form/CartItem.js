@@ -1,20 +1,57 @@
 import { faMinus, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
+import { useFetchCart } from "../../hooks/useFetchCart";
+import { useOrderNowProvider } from "../../providers/OrderNowProvider";
 
 const CartItem = ({ item, onRemoveItem }) => {
   const [itemQty, setItemQty] = useState(item.quantity);
-  const handleChangeQty = (value) => {
+  const { updateItemQty } = useFetchCart();
+  const [isLoading, setIsLoading] = useState(false);
+  const { updateState } = useOrderNowProvider();
+
+  const handleChangeQty = async (value) => {
+    setIsLoading(true);
     if (value < 1) {
       window.alert("min quantity is 1");
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
       return;
     }
-    setItemQty(value);
+    await sendUpdateRequest(value);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+    return;
   };
 
-  const handleIncreaseQty = (value) => {
+  const sendUpdateRequest = async (newQty) => {
+    const params = {
+      cart_item_key: item.key,
+      new_qty: newQty,
+    };
+
+    const res = await updateItemQty(params);
+    if (!res) {
+      window.alert("can not update this quantity!");
+      return;
+    }
+    await updateState({ cart: res.cart_data });
+    setItemQty(newQty);
+    return;
+  };
+
+  const handleIncreaseQty = async (value) => {
+    setIsLoading(true);
     const newQty = itemQty + value;
-    if (newQty >= 1) setItemQty(newQty);
+    if (newQty >= 1) {
+      await sendUpdateRequest(newQty);
+    }
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 300);
+    return;
   };
 
   useEffect(() => {
@@ -29,6 +66,7 @@ const CartItem = ({ item, onRemoveItem }) => {
           <div className="item-qty">
             <button
               onClick={() => handleIncreaseQty(-1)}
+              disabled={isLoading}
               className="!border-0 !p-2 !rounded-none !hover:bg-primary"
             >
               <FontAwesomeIcon icon={faMinus} />
@@ -56,6 +94,7 @@ const CartItem = ({ item, onRemoveItem }) => {
         ></span>
         <button
           className="!border-0 !p-0 !ml-2 !bg-white"
+          disabled={isLoading}
           onClick={() => onRemoveItem(item)}
         >
           <FontAwesomeIcon

@@ -47,11 +47,7 @@ class Store_Controller extends Base_Controller
         $validated = $request->all();
 
         // get store
-        $find = Store_Model::find_by_id($validated["id"]);
-
-
-
-        $data = $find?->toArray();
+        $data = Store_Service::show_store($validated['id']);
 
         // response
         if ($data) {

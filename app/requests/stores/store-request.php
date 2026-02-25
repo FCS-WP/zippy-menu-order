@@ -23,7 +23,7 @@ class Store_Request extends Base_Request
     public function show_validate()
     {
         return [
-            'id' => ['type' => 'int', 'required' => true],
+            'id' => ['type' => 'int', 'required' => false],
         ];
     }
 
