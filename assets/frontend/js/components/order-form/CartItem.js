@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
 import { useFetchCart } from "../../hooks/useFetchCart";
 import { useOrderNowProvider } from "../../providers/OrderNowProvider";
+import { toast } from "react-toastify";
 
 const CartItem = ({ item, onRemoveItem }) => {
   const [itemQty, setItemQty] = useState(item.quantity);
@@ -13,7 +14,7 @@ const CartItem = ({ item, onRemoveItem }) => {
   const handleChangeQty = async (value) => {
     setIsLoading(true);
     if (value < 1) {
-      window.alert("min quantity is 1");
+      toast.error("min quantity is 1");
       setTimeout(() => {
         setIsLoading(false);
       }, 300);
@@ -34,10 +35,12 @@ const CartItem = ({ item, onRemoveItem }) => {
 
     const res = await updateItemQty(params);
     if (!res) {
-      window.alert("can not update this quantity!");
+      toast.error("can not update this quantity!");
       return;
     }
     await updateState({ cart: res.cart_data });
+    toast.success("Cart updated!");
+
     setItemQty(newQty);
     return;
   };

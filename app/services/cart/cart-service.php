@@ -154,10 +154,17 @@ class Cart_Service
                 'subtotal'   => $item['line_total'],
             ];
         }
+        
+        $errors = null;
 
+        if (!$cart_item_key) {
+            $errors = wc_get_notices('error');
+            wc_clear_notices();
+        }
 
         return [
-            'message' => !empty($cart_item_key) ? 'Item added to cart successfully' : 'Failed to add item to cart',
+            'message' => !empty($cart_item_key) ? 'Item added to cart successfully' : $errors[0]['notice'],
+            'added_to_cart' => !empty($cart_item_key),
             'cart_data' => [
                 'items' => $items,
                 'total' => $cart_handler->get_cart_totals(),

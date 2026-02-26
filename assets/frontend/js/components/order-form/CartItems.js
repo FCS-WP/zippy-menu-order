@@ -4,6 +4,7 @@ import Popup from '../common/popup/Popup';
 import ConfirmPopup from '../common/popup/ConfirmPopup';
 import { useFetchCart } from '../../hooks/useFetchCart';
 import { useOrderNowProvider } from '../../providers/OrderNowProvider';
+import { toast } from 'react-toastify';
 
 const CartItems = ({ items }) => {
   const [isOpenPopupConfirm, setIsOpenPopupConfirm] = useState(false);
@@ -19,11 +20,12 @@ const CartItems = ({ items }) => {
     const res = await removeItemFromCart(params);
 
     if (!res) {
-      window.alert("Failed to delete item");
+      toast.error("Failed to delete item");
       return;
     }
     await updateState({ cart: res.cart_data });
     setIsOpenPopupConfirm(false);
+    toast.success('Item has been deleted!');
     setSelectedItem(null);
     return;
   }

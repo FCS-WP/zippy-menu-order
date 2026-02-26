@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React from "react";
 import { useFetchCart } from "../../hooks/useFetchCart";
 import { useOrderNowProvider } from "../../providers/OrderNowProvider";
+import Button from "../common/button/Button";
+import { toast } from "react-toastify";
 
 const ProductBox = ({ product }) => {
   const { addProductToCart } = useFetchCart();
@@ -18,13 +20,22 @@ const ProductBox = ({ product }) => {
 
     const res = await addProductToCart(params);
 
-    if (!res) {
-      window.alert("Add to cart failed!");
+    if (!res || !res.added_to_cart) {
+      toast.error(res.message ?? "Add to cart failed!");
       return;
     }
-    
+
+    toast.success(res.message ?? "Add to cart successfully!");
     await updateState({ cart: res.cart_data });
     return;
+  };
+
+  const isAvailableProduct = (product) => {
+    if (!product.price || product.stock <= 0) {
+      return false;
+    }
+
+    return true;
   };
 
   return (
@@ -35,7 +46,13 @@ const ProductBox = ({ product }) => {
 
       <div className="product-infos">
         <h6 className="product-name">{product.name}</h6>
-        <h5 className="product-price">${product.price}</h5>
+        <h5 className="product-price">
+          {product.stock > 0
+            ? product.price
+              ? "$" + product.price
+              : "___"
+            : "Out of stock"}
+        </h5>
         <p className="product-description">
           {product.short_description
             ? product.short_description
@@ -44,13 +61,14 @@ const ProductBox = ({ product }) => {
       </div>
 
       <div className="product-action">
-        <button
-          className="custom-add-to-cart"
+        <Button
+          className="custom-add-to-cart !rounded-1"
           data-product_id={product.id}
           onClick={handleAddToCart}
+          disabled={!isAvailableProduct(product)}
         >
           <FontAwesomeIcon icon={faCartShopping} />
-        </button>
+        </Button>
 
         <span className="add-to-cart-noti hidden">
           <FontAwesomeIcon icon={faCheck} />{" "}
