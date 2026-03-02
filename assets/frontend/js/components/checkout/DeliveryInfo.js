@@ -3,7 +3,7 @@ import DatePicker from "react-datepicker";
 import { useFetchStore } from "../../hooks/useFetchStore";
 
 const DeliveryInfo = () => {
-  const { operations, fetchOperations } = useFetchStore();
+  const { operations, fetchOperations, store, fetchStore } = useFetchStore();
   const [deliveryDate, setDeliveryDate] = useState(new Date());
   const [deliveryTime, setDeliveryTime] = useState("");
   const [deliveryType, setDeliveryType] = useState("delivery");
@@ -55,11 +55,15 @@ const DeliveryInfo = () => {
 
   useEffect(() => {
     fetchOperations(0);
+    fetchStore(0);
   }, []);
+
 
   return (
     <div className="mb-4">
-      <h3>Delivery Details</h3>
+      <h3>Delivery Details {store && store.name ? '- [' + store?.name + ']' : ""}</h3>
+     
+      <h5></h5>
       <div className="md:flex flex-wrap gap-[6%]">
         <div className="w-[100%] flex flex-col mb-4">
           <div className="form-group">

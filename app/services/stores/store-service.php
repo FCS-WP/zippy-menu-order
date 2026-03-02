@@ -152,7 +152,7 @@ class Store_Service
             ];
         }
 
-        $store = Store_Model::find_by_id($store_id);
+        $store = Store_Model::find_by_id($id);
         
         if (!$store) {
            return [
@@ -163,5 +163,4 @@ class Store_Service
       
         return $store->toArray();
     }
-
 }
