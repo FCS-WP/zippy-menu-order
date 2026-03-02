@@ -23,21 +23,20 @@ class Store_Request extends Base_Request
     public function show_validate()
     {
         return [
-            'id' => ['type' => 'int', 'required' => true],
+            'id' => ['type' => 'int', 'required' => false],
         ];
     }
 
     public function update_validate()
     {
-        $this->postRules['id'] = 'required|numeric';
+        $this->postRules['id'] = ['type' => 'int', 'required' => true];
         return $this->postRules;
     }
 
     public function destroy_validate()
     {
         return [
-            'ids' => 'required|array',
-            'ids.*' => 'required|numeric',
+            'ids' => ['type' => 'array', 'required' => true],
         ];
     }
 

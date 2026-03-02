@@ -64,7 +64,7 @@ class Product_Services
     }
 
     public static function get_product_categories()
-    {
+    {        
         $terms = get_terms([
             'taxonomy'   => 'product_cat',
             'hide_empty' => false,
@@ -80,5 +80,93 @@ class Product_Services
         }
 
         return $categories;
+    }
+
+    /**
+     * Optimized + Cached: Get categories with products
+     *
+     * @return array
+     */
+    public static function get_products_and_categories()
+    {
+        $cache_key = 'custom_products_categories_v1';
+
+        // 1 Try get cache first
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            return $cached;
+        }
+
+        // Get categories
+        $terms = get_terms([
+            'taxonomy'   => 'product_cat',
+            'hide_empty' => false,
+        ]);
+
+        if (is_wp_error($terms) || empty($terms)) {
+            return [];
+        }
+
+        $categories = [];
+        foreach ($terms as $term) {
+            $categories[$term->term_id] = [
+                'id'       => $term->term_id,
+                'name'     => $term->name,
+                'slug'     => $term->slug,
+                'products' => [],
+            ];
+        }
+
+        // Get all products in ONE query
+        $products = wc_get_products([
+            'status' => 'publish',
+            'limit'  => -1,
+        ]);
+
+        foreach ($products as $product) {
+            $image_id = $product->get_image_id();
+
+            $image_url = $image_id
+                ? wp_get_attachment_image_url($image_id, 'woocommerce_thumbnail')
+                : '';
+
+            if (!$image_url) {
+                $image_url = wc_placeholder_img_src();
+            }
+
+            $product_data = [
+                'id'                => $product->get_id(),
+                'name'              => $product->get_name(),
+                'price'             => $product->get_price(),
+                'stock'             => $product->get_stock_quantity(),
+                'description'       => $product->get_description(),
+                'short_description' => $product->get_short_description(),
+                'featured_image' => $image_url
+            ];
+
+            $product_terms = wp_get_post_terms(
+                $product->get_id(),
+                'product_cat',
+                ['fields' => 'ids']
+            );
+
+            foreach ($product_terms as $term_id) {
+                if (isset($categories[$term_id])) {
+                    $categories[$term_id]['products'][] = $product_data;
+                }
+            }
+        }
+
+        $result = array_values($categories);
+
+        // Save cache (1 hour)
+        set_transient($cache_key, $result, HOUR_IN_SECONDS);
+
+        return $result;
+    }
+
+    public static function clear_products_categories_cache()
+    {
+        delete_transient('custom_products_categories_v1');
     }
 }

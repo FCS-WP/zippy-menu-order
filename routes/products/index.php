@@ -12,3 +12,5 @@ Route::middleware([])
     ->get('products/get-addition-info', [Product_Controllers::class, 'get_addition_info']);
 Route::middleware([Auth_Middleware::class, Admin_Middleware::class])
     ->get('products/get-categories', [Product_Controllers::class, 'get_product_categories']);
+Route::middleware([Auth_Middleware::class, Admin_Middleware::class])
+    ->get('products/get-categories-products', [Product_Controllers::class, 'get_products_and_categories']);

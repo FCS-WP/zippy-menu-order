@@ -24,4 +24,47 @@ class Cart_Controller extends Base_Controller
             return $this->error($e->getMessage());
         }
     }
+
+    public function normal_add_to_cart(Cart_Request $request)
+    {
+        try {
+            $validated = $request->all();
+            $data = Cart_Service::normal_add_to_cart($validated);
+            return $this->success($data);
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    public function get_cart(Cart_Request $request)
+    {
+        try {
+            $validated = $request->all();
+            $data = Cart_Service::get_cart($validated);
+            return $this->success($data);
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    public function update_cart_item_qty(Cart_Request $request)
+    {
+        try {
+            $validated = $request->all();
+            $data = Cart_Service::update_qty($validated);
+            return $this->success($data);
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+    public function remove_cart_item(Cart_Request $request)
+    {
+        try {
+            $validated = $request->all();
+            $data = Cart_Service::remove_item($validated);
+            return $this->success($data);
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage());
+        }
+    }
 }

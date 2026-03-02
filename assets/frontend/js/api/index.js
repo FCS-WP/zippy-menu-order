@@ -25,10 +25,38 @@ export const FEStoreApi = {
   async getOperations(id) {
     return await makeRequest("/operations/" + id);
   },
+  async saveSession(params) {
+    return await makeRequest("stores/save-store-session", params, 'POST');
+  },
+  
+};
+
+export const FEProductsApi = {
+  async getProducts(params) {
+    return await makeRequest("/products", params);
+  },
+  async getProductsAndCategories(params) {
+    return await makeRequest("/products/get-categories-products", params);
+  },
+};
+
+export const FECartApi = {
+  async normalAddToCart(params) {
+    return await makeRequest("/cart/normal-add-to-cart", params, "POST");
+  },
+  async updateCartItemQty(params) {
+    return await makeRequest("/cart/update-cart-item", params, "POST");
+  },
+  async getCart(params) {
+    return await makeRequest("/cart/cart-data", params);
+  },
+  async removeCartItem(params) {
+    return await makeRequest("/cart/remove-cart-item", params, "POST");
+  },
 };
 
 export const orderApi = {
   async addToCart(params) {
-    return await makeRequest("/cart/add-to-cart", params, 'POST');
+    return await makeRequest("/cart/add-to-cart", params, "POST");
   },
 };

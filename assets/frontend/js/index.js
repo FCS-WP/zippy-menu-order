@@ -5,3 +5,5 @@
 // import "./pages/booking";
 import "./pages/order";
 import "./pages/menus";
+import "./pages/order-now";
+import "./pages/checkout";

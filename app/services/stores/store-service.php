@@ -2,6 +2,7 @@
 
 namespace ZIPPY_MENU_ORDER\App\Services\Stores;
 
+use ZIPPY_MENU_ORDER\App\Models\Cart\Cart_Handler;
 use ZIPPY_MENU_ORDER\App\Models\Products_Booking\Products_Booking_Model;
 use ZIPPY_MENU_ORDER\App\Models\Stores\Store_Model;
 
@@ -9,8 +10,9 @@ class Store_Service
 {
     public static function checkStoreExist($id)
     {
+        $store_id = $id && $id !== 0 ? $id : WC()->session->get('selected_store');
         $store = Store_Model::find()
-            ->where(['id' => $id])
+            ->where(['id' => $store_id])
             ->WhereNull('deleted_at')
             ->andWhere(['active' => 1])
             ->one();
@@ -113,5 +115,52 @@ class Store_Service
         }
 
         return $data;
+    }
+
+    public static function save_session($store_id) {
+        $store = Store_Model::find_by_id($store_id);
+        if (!$store) {
+           return [
+                'success' => false,
+                'message' => 'Store not found',
+            ];
+        }
+        $cart_handler = new Cart_Handler();
+
+        WC()->session->set('selected_store', $store_id);
+        WC()->session->save_data();
+
+        return [
+            'message' => 'saved session!',
+            'store' => $store->name,
+        ];
+    }
+
+     public static function show_store($store_id) {
+        $id = null;
+        if (!$store_id || $store_id == 0) {
+            $cart_handler = new Cart_Handler();
+            $id = WC()->session->get('selected_store');
+        } else {
+            $id = $store_id;
+        }
+
+        if (!$id) {
+            return [
+                'success' => false,
+                'message' => 'Store_id not found',
+            ];
+        }
+
+        $store = Store_Model::find_by_id($id);
+        
+        if (!$store) {
+           return [
+                'success' => false,
+                'message' => 'Store not found',
+            ];
+        }
+      
+        return $store->toArray();
     }
 }

@@ -26,6 +26,7 @@ class FrontEnd_Setting
         add_shortcode('menu_order_list', [$this, 'menu_order_list']);
         add_action('wp_enqueue_scripts', [$this, 'build_style_and_scripts'], 9999);
         register_activation_hook(ZIPPY_MENU_ORDER_BASENAME, [$this, 'create_order_pages']);
+        add_shortcode('order_now_form', [$this, 'render_order_now_form']);
     }
 
     function register_order_form($atts)
@@ -104,5 +105,10 @@ class FrontEnd_Setting
             'nonce'    => wp_create_nonce('wp_rest'),
             'timezone' => wp_timezone_string() ?: sprintf('%+03d:00', get_option('gmt_offset')),
         ));
+    }
+
+    function render_order_now_form() 
+    {
+        return '<div id="order_now_form"></div>';
     }
 }

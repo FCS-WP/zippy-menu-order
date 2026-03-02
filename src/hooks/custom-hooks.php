@@ -6,7 +6,10 @@
  */
 
 use ZIPPY_MENU_ORDER\App\Models\Menus\Menu_Model;
+use ZIPPY_MENU_ORDER\App\Models\Stores\Store_Model;
 use ZIPPY_MENU_ORDER\App\Services\Stores\Store_Operation_Service;
+
+$enabled_menu_order = false;
 
 add_filter('woocommerce_cart_item_permalink', function ($link, $cart_item) {
     if (!empty($cart_item['is_custom_menu'])) {
@@ -166,13 +169,16 @@ add_action('woocommerce_review_order_after_cart_contents', function () {
 });
 
 add_action('woocommerce_order_details_after_order_table', function ($order) {
-    if (!$order) return;
+    global $enabled_menu_order;
+    if (!$order || !$enabled_menu_order) return;
     echo '<h3>Menu Details</h3>';
     echo '<div style="margin-top:20px;padding:15px;border:1px solid #ddd; background: #FFF">';
     zippy_render_menu_dishes($order->get_items());
     echo '</div>';
 });
 add_action('woocommerce_email_after_order_table', function ($order) {
+    global $enabled_menu_order;
+    if (!$order || !$enabled_menu_order) return;
     echo '<h2>Menu Details</h2>';
     echo '<div style="padding: 12px; color: #636363; border: 1px solid #e5e5e5">';
     zippy_render_menu_dishes($order->get_items());
@@ -184,13 +190,23 @@ add_action('woocommerce_email_after_order_table', function ($order) {
  */
 
 add_action('woocommerce_checkout_create_order', function ($order, $data) {
-    $delivery_date = WC()->session->get('zippy_delivery_date');
-    $delivery_time_id = WC()->session->get('zippy_delivery_time');
-    $delivery_time = Store_Operation_Service::get_display_time_by_slot_id(STORE_ID, $delivery_date, $delivery_time_id) ?? $delivery_time_id;
+    $checkout_post_date = sanitize_text_field($_POST['delivery_date']) ? convert_date_to_ymd(sanitize_text_field($_POST['delivery_date'])) : null;
+    $delivery_date = WC()->session->get('zippy_delivery_date') ?? $checkout_post_date;
+    $store_id = WC()->session->get('selected_store') ?? STORE_ID;
+    $delivery_time_id = WC()->session->get('zippy_delivery_time') ?? sanitize_text_field($_POST['delivery_time']);
+    $delivery_type =  sanitize_text_field($_POST['delivery_type']);
+    $delivery_time = Store_Operation_Service::get_display_time_by_slot_id($store_id, $delivery_date, $delivery_time_id) ?? $delivery_time_id;
 
     $nums_of_pax   = WC()->session->get('zippy_nums_of_pax');
+    if ($delivery_type) {
+        $type = $delivery_type == 'delivery' ? 'Home Delivery' : 'Take Away';
+        $order->update_meta_data('_delivery_type', $type );
+    }
     if ($delivery_date) {
         $order->update_meta_data('_delivery_date', $delivery_date);
+    }
+    if ($delivery_time) {
+        $order->update_meta_data('_delivery_time', $delivery_time);
     }
     if ($delivery_time) {
         $order->update_meta_data('_delivery_time', $delivery_time);
@@ -198,12 +214,20 @@ add_action('woocommerce_checkout_create_order', function ($order, $data) {
     if ($nums_of_pax) {
         $order->update_meta_data('_nums_of_pax', $nums_of_pax);
     }
+    if ($store_id) {
+        $store = Store_Model::find_by_id($store_id);
+        $order->update_meta_data('_selected_store', $store->name);
+    }
 }, 10, 2);
 
 add_action('woocommerce_checkout_order_processed', function () {
+    // For menu order
     WC()->session->__unset('zippy_delivery_date');
     WC()->session->__unset('zippy_delivery_time');
     WC()->session->__unset('zippy_nums_of_pax');
+
+    // For normal order: 
+    WC()->session->__unset('selected_store');
 });
 
 /**
@@ -211,12 +235,22 @@ add_action('woocommerce_checkout_order_processed', function () {
  * 
  */
 add_action('woocommerce_admin_order_data_after_shipping_address', function ($order) {
+    if ($order->get_meta('_delivery_type')) {
+        echo '<p><strong>Type:</strong> '
+            . esc_html($order->get_meta('_delivery_type')) . '</p>';
+    }
     echo '<p><strong>Delivery Date:</strong> '
         . esc_html($order->get_meta('_delivery_date')) . '</p>';
     echo '<p><strong>Delivery Time:</strong> '
         . esc_html($order->get_meta('_delivery_time')) . '</p>';
-    echo '<p><strong>Number of Pax:</strong> '
-        . esc_html($order->get_meta('_nums_of_pax')) . '</p>';
+    if ($order->get_meta('_nums_of_pax')) {
+        echo '<p><strong>Number of Pax:</strong> '
+            . esc_html($order->get_meta('_nums_of_pax')) . '</p>';
+    }
+    if ($order->get_meta('_selected_store')) {
+        echo '<p><strong>Store:</strong> '
+            . esc_html($order->get_meta('_selected_store')) . '</p>';
+    }
 });
 
 /**
@@ -228,17 +262,25 @@ add_action('woocommerce_thankyou', function ($order_id) {
     $order = wc_get_order($order_id);
     $delivery_date = $order->get_meta('_delivery_date');
     $delivery_time = $order->get_meta('_delivery_time');
+    $selected_store = $order->get_meta('_selected_store');
+    $delivery_type = $order->get_meta('_delivery_type');
     $nums_of_pax   = $order->get_meta('_nums_of_pax');
 
     if (!$delivery_date && !$delivery_time) return;
 
     echo '<h3>Delivery Information</h3>';
     echo '<div class="zippy-delivery-info" style="margin-top:20px;padding:15px;border:1px solid #ddd; background: #FFF">';
+    if ($delivery_type) {
+        echo '<p><strong>Type:</strong> ' . esc_html($delivery_type) . '</p>';
+    }
     if ($delivery_date) {
         echo '<p><strong>Date:</strong> ' . esc_html($delivery_date) . '</p>';
     }
     if ($delivery_time) {
         echo '<p><strong>Time:</strong> ' . esc_html($delivery_time) . '</p>';
+    }
+    if ($selected_store) {
+        echo '<p><strong>Store:</strong> ' . esc_html($selected_store) . '</p>';
     }
     if ($nums_of_pax) {
         echo '<p><strong>Number of Pax:</strong> ' . esc_html($nums_of_pax) . '</p>';
@@ -252,7 +294,9 @@ add_action('woocommerce_thankyou', function ($order_id) {
 add_action('woocommerce_email_order_meta', function ($order, $sent_to_admin, $plain_text, $email) {
 
     $delivery_date = $order->get_meta('_delivery_date');
+    $delivery_type = $order->get_meta('_delivery_type');
     $delivery_time = $order->get_meta('_delivery_time');
+    $selected_store = $order->get_meta('_selected_store');
     $nums_of_pax   = $order->get_meta('_nums_of_pax');
 
     if (!$delivery_date && !$delivery_time && !$nums_of_pax) {
@@ -268,6 +312,9 @@ add_action('woocommerce_email_order_meta', function ($order, $sent_to_admin, $pl
         if ($delivery_time) {
             echo "Time Slot: " . $delivery_time . "\n";
         }
+        if ($selected_store) {
+            echo "Store: " . $selected_store . "\n";
+        }
         if ($nums_of_pax) {
             echo "Pax: " . $nums_of_pax . "\n";
         }
@@ -276,12 +323,19 @@ add_action('woocommerce_email_order_meta', function ($order, $sent_to_admin, $pl
     else {
         echo '<h2 style="margin-top: 24px">Delivery Information</h2>';
         echo '<div style="padding: 12px; color: #636363; border: 1px solid #e5e5e5">';
+        if ($delivery_type) {
+            echo '<p><strong>Type:</strong> ' . esc_html($delivery_type) . '</p>';
+        }
         if ($delivery_date) {
             echo '<p><strong>Date:</strong> ' . esc_html($delivery_date) . '</p>';
         }
         if ($delivery_time) {
             echo '<p><strong>Time:</strong> ' . esc_html($delivery_time) . '</p>';
         }
+        if ($selected_store) {
+            echo "<p><strong>Store:</strong>: " . $selected_store . '</p>';
+        }
+        
         if ($nums_of_pax) {
             echo '<p><strong>Pax:</strong> ' . esc_html($nums_of_pax) . '</p>';
         }
@@ -364,3 +418,64 @@ add_filter('woocommerce_hidden_order_itemmeta', function ($hidden_meta_keys) {
     $hidden_meta_keys[] = 'menu_data';
     return $hidden_meta_keys;
 });
+
+
+/**
+ * Clear product-category cache
+ */
+function clear_products_categories_cache()
+{
+    delete_transient('custom_products_categories_v1');
+}
+
+// When product is saved
+add_action('save_post_product', 'clear_products_categories_cache');
+
+// When product deleted
+add_action('deleted_post', function ($post_id) {
+    if (get_post_type($post_id) === 'product') {
+        clear_products_categories_cache();
+    }
+});
+
+// When category edited
+add_action('edited_product_cat', 'clear_products_categories_cache');
+add_action('created_product_cat', 'clear_products_categories_cache');
+add_action('delete_product_cat', 'clear_products_categories_cache');
+
+// Add section in checkout page
+add_action('woocommerce_checkout_before_customer_details', 'add_div_before_billing_section');
+function add_div_before_billing_section() {
+    global $enabled_menu_order;
+    if ($enabled_menu_order) return false;
+    echo '<div id="custom_checkout_infos" class="custom-delivery-information"></div>';
+    return true;
+}
+
+
+add_action('woocommerce_checkout_process', function () {
+    // Delivery Type
+    global $enabled_menu_order;
+    if ($enabled_menu_order) return;
+    if (empty($_POST['delivery_type'])) {
+        wc_add_notice(__('Please select delivery type.'), 'error');
+    }
+    // Delivery Date
+    if (empty($_POST['delivery_date'])) {
+        wc_add_notice(__('Please select delivery date.'), 'error');
+    }
+    // Delivery Time
+    if (empty($_POST['delivery_time'])) {
+        wc_add_notice(__('Please select delivery time.'), 'error');
+    }
+});
+// 
+function convert_date_to_ymd($date) {
+    $dateObj = DateTime::createFromFormat('m/d/Y', $date);
+
+    if ($dateObj && $dateObj->format('m/d/Y') === $date) {
+        return $dateObj->format('Y-m-d');
+    }
+
+    return false; // invalid format
+}
