@@ -12,4 +12,8 @@ Route::middleware(middleware: [])
 Route::middleware(middleware: [])
     ->post('cart/remove-cart-item', [Cart_Controller::class, 'remove_cart_item']);
 Route::middleware(middleware: [])
+    ->post('cart/remove-current-cart', [Cart_Controller::class, 'remove_current_cart']);
+Route::middleware(middleware: [])
+    ->get('cart/check-cart', [Cart_Controller::class, 'check_existing_cart']);
+Route::middleware(middleware: [])
     ->get('cart/cart-data', [Cart_Controller::class, 'get_cart']);

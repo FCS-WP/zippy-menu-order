@@ -57,12 +57,40 @@ class Cart_Controller extends Base_Controller
             return $this->error($e->getMessage());
         }
     }
+
     public function remove_cart_item(Cart_Request $request)
     {
         try {
             $validated = $request->all();
             $data = Cart_Service::remove_item($validated);
             return $this->success($data);
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    public function check_existing_cart(Cart_Request $request)
+    {
+        try {
+            $validated = $request->all();
+            $data = Cart_Service::is_has_cart($validated['store_id']);
+            return $this->success($data);
+        } catch (\Exception $e) {
+            return $this->error($e->getMessage());
+        }
+    }
+
+    public function remove_current_cart(Cart_Request $request)
+    {
+        try {
+            $validated = $request->all();
+            $clear = Cart_Service::remove_current_cart($validated['store_id']);
+            if ($clear) {
+                $data = Cart_Service::get_cart();
+                return $this->success($data);
+            } else {
+                return $this->error('Failed while remove cart');
+            }
         } catch (\Exception $e) {
             return $this->error($e->getMessage());
         }

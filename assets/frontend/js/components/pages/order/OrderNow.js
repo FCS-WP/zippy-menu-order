@@ -1,33 +1,28 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useFetchStore } from "../../../hooks/useFetchStore";
-import { useFetchProducts } from "../../../hooks/useFetchProducts";
 import { useOrderNowProvider } from "../../../providers/OrderNowProvider";
 import Button from "../../common/button/Button";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faCartShopping,
-  faCheck,
-  faMinus,
-  faPlus,
-  faTrash,
-} from "@fortawesome/free-solid-svg-icons";
 import ProductBox from "../../order-form/ProductBox";
 import CartItems from "../../order-form/CartItems";
+import { FECartApi } from "../../../api";
+import { useFetchCart } from "../../../hooks/useFetchCart";
+import ConfirmPopup from "../../common/popup/ConfirmPopup";
+import { toast } from "react-toastify";
 
 const OrderNow = () => {
   const store_id =
     new URLSearchParams(window.location.search).get("store_id") || "";
 
-  const { operations, fetchOperations, saveStoreSession } = useFetchStore();
+  const { saveStoreSession } = useFetchStore();
+  const [isOpenPopupConfirm, setIsOpenPopupConfirm] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
-  const { categories, cart } = useOrderNowProvider();
- 
-  // 🔥 refs map
+  const { categories, cart, updateState } = useOrderNowProvider();
+  const { checkCurrentCart, clearCart } = useFetchCart();
+  //  refs map
   const sectionRefs = useRef({});
-  // 🔥 Scroll handler
+  //  Scroll handler
   const handleClickCategory = (id) => {
     setActiveCategory(id);
-
     const section = sectionRefs.current[id];
 
     if (section) {
@@ -38,9 +33,44 @@ const OrderNow = () => {
     }
   };
 
+  const handleCheckCart = async () => {
+    if (!store_id) return;
+    const params = {
+      store_id: store_id,
+    };
+
+    const res = await checkCurrentCart(params);
+    if (!res) return false;
+
+    // empty cart || is current store -> save session;
+    if (!res.has_cart || !res.is_new) {
+      saveStoreSession({ store_id: store_id });
+      return true;
+    }
+    // has cart -> is new cart -> show popup clear cart or not?
+    setIsOpenPopupConfirm(true);
+  };
+
+  const handleConfirmPopup = async () => {
+    saveStoreSession({ store_id: store_id });
+    const res = await clearCart({ store_id: store_id });
+    if (!res) {
+      toast.error("Failed to handle request! Please try again later.");
+      return;
+    }
+    await updateState({ cart: res.cart_data });
+    setIsOpenPopupConfirm(false);
+    toast.success("Create cart successfully!");
+    return;
+  };
+
+  const handleCancelPopup = () => {
+    setIsOpenPopupConfirm(false);
+    window.location.replace("/order-online");
+  };
+
   useEffect(() => {
-    fetchOperations(store_id);
-    saveStoreSession({store_id: store_id});
+    handleCheckCart();
   }, [store_id]);
 
   useEffect(() => {
@@ -50,7 +80,7 @@ const OrderNow = () => {
   }, []);
 
   const handleGoToCheckout = () => {
-    window.location.href = window.location.origin + '/checkout';
+    window.location.href = window.location.origin + "/checkout";
   };
 
   if (categories.length == 0) return;
@@ -130,6 +160,15 @@ const OrderNow = () => {
           </Button>
         </div>
       </div>
+
+      <ConfirmPopup
+        isOpen={isOpenPopupConfirm}
+        title="Warning!"
+        confirmText="New Cart"
+        message="You already have a cart at another store. Creating a new cart will replace the existing one."
+        onConfirm={() => handleConfirmPopup()}
+        onClose={() => handleCancelPopup()}
+      />
     </div>
   );
 };

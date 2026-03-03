@@ -74,13 +74,49 @@ export const useFetchCart = () => {
     }
   };
 
+  const checkCurrentCart = async (params) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await FECartApi.checkCart(params);
+      if (data?.status === "success") {
+        return data.data;
+      }
+    } catch (err) {
+      console.error("Error get cart data:", err);
+      setError(err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearCart = async (params) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await FECartApi.removeCurrentCart(params);
+      if (data?.status === "success") {
+        return data.data;
+      }
+    } catch (err) {
+      console.error("Error get cart data:", err);
+      setError(err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return {
     cart,
     loading,
     error,
     fetchCart,
+    clearCart,
     addProductToCart,
     updateItemQty,
+    checkCurrentCart,
     removeItemFromCart,
   };
 };
