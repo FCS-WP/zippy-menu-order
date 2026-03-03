@@ -304,4 +304,55 @@ class Cart_Service
 
         return false;
     }
+
+    public static function is_has_cart($store_id) 
+    {
+        $cart_handler = new Cart_Handler();
+        $session_store_id = WC()->session->get('selected_store');
+
+        if (!$session_store_id) {
+            $cart_handler->clear_cart();
+            return [
+                'has_cart' => false,
+                'is_new' => true,
+            ];
+        }
+
+        // Has cart && the same store.
+        if (intval($session_store_id) == intval($store_id)) {
+            return [
+                'has_cart' => true,
+                'is_new' => false,
+            ];
+        }
+
+        // Has cart
+        $cart_items = $cart_handler->get_cart_items();
+        if ($cart_items && count($cart_items) > 0) {
+            return [
+                'has_cart' => true,
+                'is_new' => true,
+            ];
+        }
+
+        return [
+            'has_cart' => false,
+            'is_new' => true,
+        ];
+    }
+    
+
+    public static function remove_current_cart($store_id) {
+        try {
+            $cart_handler = new Cart_Handler();
+            $cart_handler->clear_cart();
+
+            WC()->session->set('selected_store', $store_id);
+            WC()->session->save_data();
+            return true;    
+        } catch (\Throwable $th) {
+            throw $th;
+            return false;
+        }
+    }
 }

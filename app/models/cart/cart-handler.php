@@ -78,7 +78,9 @@ class Cart_Handler
      */
     public function clear_cart()
     {
-        WC()->cart->empty_cart();
+        WC()->cart->empty_cart(true);
+        wc_clear_notices();
+        WC()->session->save_data();
     }
 
     /**

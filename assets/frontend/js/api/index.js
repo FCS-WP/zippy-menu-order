@@ -41,6 +41,12 @@ export const FEProductsApi = {
 };
 
 export const FECartApi = {
+  async checkCart(params) {
+    return await makeRequest("/cart/check-cart", params);
+  },
+  async removeCurrentCart(params) {
+    return await makeRequest("/cart/remove-current-cart", params, 'POST');
+  },
   async normalAddToCart(params) {
     return await makeRequest("/cart/normal-add-to-cart", params, "POST");
   },
