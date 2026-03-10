@@ -31,7 +31,7 @@ const ProductBox = ({ product }) => {
   };
 
   const isAvailableProduct = (product) => {
-    if (!product.price || product.stock <= 0) {
+    if (!product.price || !product.add_to_cart) {
       return false;
     }
 
@@ -47,11 +47,11 @@ const ProductBox = ({ product }) => {
       <div className="product-infos">
         <h6 className="product-name">{product.name}</h6>
         <h5 className="product-price">
-          {product.stock > 0
+          {product.add_to_cart
             ? product.price
               ? "$" + product.price
               : "___"
-            : "Out of stock"}
+            : "___"}
         </h5>
         <p className="product-description">
           {product.short_description

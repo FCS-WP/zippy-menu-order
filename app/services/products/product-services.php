@@ -141,6 +141,7 @@ class Product_Services
                 'stock'             => $product->get_stock_quantity(),
                 'description'       => $product->get_description(),
                 'short_description' => $product->get_short_description(),
+                'add_to_cart'       => $product->is_purchasable(),
                 'featured_image' => $image_url
             ];
 
