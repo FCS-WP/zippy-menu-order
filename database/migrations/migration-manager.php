@@ -2,6 +2,7 @@
 
 namespace ZIPPY_MENU_ORDER\Database\Migrations;
 
+use ZIPPY_MENU_ORDER\Database\Migrations\Audit_Logs\Audit_Logs_Migration;
 use ZIPPY_MENU_ORDER\Database\Migrations\Dishes\Dishes_Migration;
 use ZIPPY_MENU_ORDER\Database\Migrations\Menus\Dishes_Menu_Migration;
 use ZIPPY_MENU_ORDER\Database\Migrations\Menus\Menus_Migration;
@@ -37,6 +38,7 @@ class Migration_Manager
             new Store_Migration(),
             new Store_Operation_Migration(),
             new Special_Days_Migration(),
+            new Audit_Logs_Migration(),
         ];
     }
 
