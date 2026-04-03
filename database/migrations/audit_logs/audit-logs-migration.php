@@ -6,7 +6,7 @@ use ZIPPY_MENU_ORDER\Core\Base_Migration;
 
 class Audit_Logs_Migration extends Base_Migration
 {
-    protected $version = '1.0';
+    protected $version = '1.1';
     protected $stores_table;
 
     public function __construct()

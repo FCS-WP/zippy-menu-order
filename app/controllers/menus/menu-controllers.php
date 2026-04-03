@@ -21,6 +21,7 @@ class Menu_Controllers extends Base_Controller
 	public function get_menus_with_ids(Menu_Request $request)
 	{
 		$validated = $request->all();
+		if (empty($validated['ids'])) return $this->success([], 200);
 		$result = Menu_Services::get_menus($validated);
 		return $this->success($result, 200);
 	}
