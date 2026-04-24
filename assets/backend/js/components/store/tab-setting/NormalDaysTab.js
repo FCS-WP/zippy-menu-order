@@ -51,6 +51,14 @@ export default function NormalDaysTab({
     newSlots: [],
   });
 
+  //  CONFIRM GENERATE
+  const [confirmGenerate, setConfirmGenerate] = useState({
+    open: false,
+    dayIndex: null,
+    deletedSlotIds: [],
+    newSlots: [],
+  });
+
   //  HELPERS
   const parseTime = (t) => {
     if (!t) return null;
@@ -96,6 +104,46 @@ export default function NormalDaysTab({
           : day,
       ),
     );
+  };
+
+  //  GENERATE HOURLY SLOTS 11am - 10pm
+  const HOURLY_START_HOUR = 11; // 11:00
+  const HOURLY_END_HOUR = 22; // 22:00
+
+  const buildHourlySlots = () => {
+    const slots = [];
+    for (let h = HOURLY_START_HOUR; h < HOURLY_END_HOUR; h++) {
+      const pad = (n) => String(n).padStart(2, "0");
+      slots.push({
+        slot_id: null,
+        open: `${pad(h)}:00:00`,
+        close: `${pad(h + 1)}:00:00`,
+      });
+    }
+    return slots;
+  };
+
+  const generateHourlySlots = (dayIndex) => {
+    const targetDay = days.find((d) => d.dayIndex === dayIndex);
+    if (!targetDay) return;
+
+    const newSlots = buildHourlySlots();
+    const deletedSlotIds = targetDay.hours
+      .filter((s) => s.slot_id)
+      .map((s) => s.slot_id);
+
+    if (deletedSlotIds.length > 0) {
+      setConfirmGenerate({
+        open: true,
+        dayIndex,
+        deletedSlotIds,
+        newSlots,
+      });
+      return;
+    }
+
+    applyPaste(dayIndex, newSlots);
+    toast.success("Generated 11 hourly slots (11am – 10pm).");
   };
 
   //  ADD / REMOVE SLOT
@@ -259,18 +307,32 @@ export default function NormalDaysTab({
                     />
                   ))}
 
-                  <Button
-                    className={`flex items-center justify-start gap-1 bg-transparent p-0 text-sm ${
-                      !day.is_open
-                        ? "cursor-not-allowed text-gray-400"
-                        : "text-green-600"
-                    }`}
-                    size="sm"
-                    onClick={() => addHourSlot(mappedIndex)}
-                    disabled={!day.is_open}
-                  >
-                    + Add hours
-                  </Button>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      className={`flex items-center justify-start gap-1 bg-transparent p-0 text-sm ${
+                        !day.is_open
+                          ? "cursor-not-allowed text-gray-400"
+                          : "text-green-600"
+                      }`}
+                      size="sm"
+                      onClick={() => addHourSlot(mappedIndex)}
+                      disabled={!day.is_open}
+                    >
+                      + Add hours
+                    </Button>
+                    <Button
+                      className={`flex items-center justify-start gap-1 bg-transparent p-0 text-sm ${
+                        !day.is_open
+                          ? "cursor-not-allowed text-gray-400"
+                          : "text-blue-600"
+                      }`}
+                      size="sm"
+                      onClick={() => generateHourlySlots(mappedIndex)}
+                      disabled={!day.is_open}
+                    >
+                      Generate 11am – 10pm (hourly)
+                    </Button>
+                  </div>
                 </div>
               </div>
             );
@@ -360,6 +422,51 @@ export default function NormalDaysTab({
           }
 
           setConfirmPaste({
+            open: false,
+            dayIndex: null,
+            deletedSlotIds: [],
+            newSlots: [],
+          });
+        }}
+      />
+
+      {/* ===== CONFIRM GENERATE HOURLY SLOTS ===== */}
+      <ConfirmPopup
+        isOpen={confirmGenerate.open}
+        title="Replace time slots"
+        message="This will remove existing time slots for this day and replace them with hourly slots from 11am to 10pm. Continue?"
+        confirmText="Replace"
+        onClose={() =>
+          setConfirmGenerate({
+            open: false,
+            dayIndex: null,
+            deletedSlotIds: [],
+            newSlots: [],
+          })
+        }
+        onConfirm={async () => {
+          const { dayIndex, deletedSlotIds, newSlots } = confirmGenerate;
+
+          try {
+            if (storeId && deletedSlotIds.length > 0) {
+              await Promise.all(
+                deletedSlotIds.map((id) =>
+                  OperetionsApi.deleteOperation({
+                    store_id: storeId,
+                    day: dayIndex,
+                    id: id,
+                  }),
+                ),
+              );
+            }
+
+            applyPaste(dayIndex, newSlots);
+            toast.success("Generated 11 hourly slots (11am – 10pm).");
+          } catch {
+            toast.error("Failed to replace time slots");
+          }
+
+          setConfirmGenerate({
             open: false,
             dayIndex: null,
             deletedSlotIds: [],

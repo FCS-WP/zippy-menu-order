@@ -10,6 +10,7 @@ import { data } from "autoprefixer";
 import { orderApi } from "../../../api";
 import { toast } from "react-toastify";
 import { validateMenuSelection } from "../../../helpers/order-helpers";
+import { isSlotInPast, formatSlotLabel } from "../../../helpers/time-helpers";
 
 const OrderForm = () => {
   const menuId =
@@ -104,6 +105,16 @@ const OrderForm = () => {
     }
     handleExcludeDate();
   }, [operations]);
+
+  useEffect(() => {
+    if (!deliveryTime) return;
+    const selected = timeSlots.find(
+      (s) => String(s.id) === String(deliveryTime),
+    );
+    if (selected && isSlotInPast(selected, deliveryDate)) {
+      setDeliveryTime("");
+    }
+  }, [timeSlots, deliveryDate, deliveryTime]);
 
   const handleExcludeDate = (date) => {
     let excludes = [];
@@ -275,11 +286,15 @@ const OrderForm = () => {
                 onChange={(e) => setDeliveryTime(e.target.value)}
               >
                 <option value="">Select time</option>
-                {timeSlots.map((time) => (
-                  <option key={time.id} value={time.id}>
-                    {time.start_time} - {time.end_time}
-                  </option>
-                ))}
+                {timeSlots.map((time) => {
+                  const past = isSlotInPast(time, deliveryDate);
+                  return (
+                    <option key={time.id} value={time.id} disabled={past}>
+                      {formatSlotLabel(time)}
+                      {past ? " (not available)" : ""}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>

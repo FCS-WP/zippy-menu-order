@@ -76,6 +76,15 @@ export const SpecialDaysApi = {
   },
 };
 
+export const SettingsApi = {
+  async getSettings() {
+    return await makeRequest("/settings");
+  },
+  async updateSettings(params) {
+    return await makeRequest("/settings", params, "PUT");
+  },
+};
+
 export const DishesMenusApi = {
   async getDishesMenus(params) {
     return await makeRequest(`/dishes-menus`, params);

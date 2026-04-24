@@ -104,6 +104,8 @@ class FrontEnd_Setting
             'url'      => esc_url_raw(rest_url(MENU_ORDER_API_NAMESPACE)),
             'nonce'    => wp_create_nonce('wp_rest'),
             'timezone' => wp_timezone_string() ?: sprintf('%+03d:00', get_option('gmt_offset')),
+            'cart_subtotal'      => (function_exists('WC') && WC()->cart) ? (float) WC()->cart->get_subtotal() : 0,
+            'min_delivery_total' => (float) get_option('zippy_min_delivery_total', ZIPPY_MIN_DELIVERY_TOTAL),
         ));
     }
 

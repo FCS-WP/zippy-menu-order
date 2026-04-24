@@ -1,14 +1,58 @@
 import React, { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import { useFetchStore } from "../../hooks/useFetchStore";
+import { isSlotInPast, formatSlotLabel } from "../../helpers/time-helpers";
 
 const DeliveryInfo = () => {
   const { operations, fetchOperations, store, fetchStore } = useFetchStore();
+  const minDeliveryTotal = Number(
+    window.zippy_menu_order_api?.min_delivery_total ?? 40,
+  );
+  const initialSubtotal = Number(
+    window.zippy_menu_order_api?.cart_subtotal ?? 0,
+  );
+  const [cartSubtotal, setCartSubtotal] = useState(initialSubtotal);
+  const deliveryAllowed = cartSubtotal >= minDeliveryTotal;
   const [deliveryDate, setDeliveryDate] = useState(new Date());
   const [deliveryTime, setDeliveryTime] = useState("");
-  const [deliveryType, setDeliveryType] = useState("delivery");
+  const [deliveryType, setDeliveryType] = useState(
+    deliveryAllowed ? "delivery" : "pickup",
+  );
   const [excludeDates, setExcludeDates] = useState([]);
   const [timeSlots, setTimeSlots] = useState([]);
+
+  useEffect(() => {
+    if (!deliveryAllowed && deliveryType === "delivery") {
+      setDeliveryType("pickup");
+    }
+  }, [deliveryAllowed]);
+
+  useEffect(() => {
+    if (!deliveryTime) return;
+    const selected = timeSlots.find((s) => String(s.id) === String(deliveryTime));
+    if (selected && isSlotInPast(selected, deliveryDate)) {
+      setDeliveryTime("");
+    }
+  }, [timeSlots, deliveryDate, deliveryTime]);
+
+  useEffect(() => {
+    const readSubtotal = () => {
+      const $ = window.jQuery;
+      if (!$) return;
+      const text = $(".cart-subtotal .amount, .order-total .amount")
+        .first()
+        .text();
+      const parsed = parseFloat(text.replace(/[^0-9.]/g, ""));
+      if (!isNaN(parsed)) setCartSubtotal(parsed);
+    };
+    const $body = window.jQuery ? window.jQuery(document.body) : null;
+    if (!$body) return;
+    $body.on("updated_checkout", readSubtotal);
+    readSubtotal();
+    return () => {
+      $body.off("updated_checkout", readSubtotal);
+    };
+  }, []);
   const isValidDate = (date) => {
     if (!operations) return true;
     const dateData = operations.days.find(
@@ -80,13 +124,21 @@ const DeliveryInfo = () => {
               id="delivery_type"
               onChange={(e) => setDeliveryType(e.target.value)}
             >
-                <option value={`delivery`}>
+                <option value={`delivery`} disabled={!deliveryAllowed}>
                   Home Delivery
+                  {!deliveryAllowed
+                    ? ` (min $${minDeliveryTotal.toFixed(0)} order)`
+                    : ""}
                 </option>
                 <option value={`pickup`}>
                   Take Away
                 </option>
             </select>
+            {!deliveryAllowed && (
+              <p className="text-sm text-red-600 mt-1">
+                Min ${minDeliveryTotal.toFixed(2)} required for Home Delivery.
+              </p>
+            )}
           </div>
         </div>
         <div className="w-[47%] flex flex-col mb-4 justify-between">
@@ -124,11 +176,15 @@ const DeliveryInfo = () => {
               onChange={(e) => setDeliveryTime(e.target.value)}
             >
               <option value="">Select time</option>
-              {timeSlots.map((time) => (
-                <option key={time.id} value={time.id}>
-                  {time.start_time} - {time.end_time}
-                </option>
-              ))}
+              {timeSlots.map((time) => {
+                const past = isSlotInPast(time, deliveryDate);
+                return (
+                  <option key={time.id} value={time.id} disabled={past}>
+                    {formatSlotLabel(time)}
+                    {past ? " (not available)" : ""}
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>

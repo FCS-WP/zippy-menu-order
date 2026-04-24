@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { ToastContainer } from "react-toastify";
 import MenuList from "../../components/settings/MenuList";
+import DeliveryConfig from "../../components/settings/DeliveryConfig";
 import { SettingsProvider } from "../../providers/SettingsProvider";
 
 // Zippy Dashboard
@@ -18,6 +19,7 @@ const SettingsPage = () => {
     <>
       <SettingsProvider>
         <MenuList />
+        <DeliveryConfig />
         <ToastContainer />
       </SettingsProvider>
     </>

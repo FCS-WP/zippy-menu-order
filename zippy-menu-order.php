@@ -57,6 +57,10 @@ if (!defined('AUDIT_LOGS_TABLE')) {
   define('AUDIT_LOGS_TABLE', 'audit_logs');
 }
 
+if (!defined('ZIPPY_MIN_DELIVERY_TOTAL')) {
+  define('ZIPPY_MIN_DELIVERY_TOTAL', 40);
+}
+
 // ini_set('display_errors', 1);
 // ini_set('display_startup_errors', 1);
 // error_reporting(E_ALL);

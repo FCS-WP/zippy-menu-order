@@ -468,6 +468,21 @@ add_action('woocommerce_checkout_process', function () {
     if (empty($_POST['delivery_time'])) {
         wc_add_notice(__('Please select delivery time.'), 'error');
     }
+    // Home Delivery minimum order
+    $delivery_type = sanitize_text_field($_POST['delivery_type'] ?? '');
+    if ($delivery_type === 'delivery' && WC()->cart) {
+        $min_delivery_total = (float) get_option('zippy_min_delivery_total', ZIPPY_MIN_DELIVERY_TOTAL);
+        $subtotal = (float) WC()->cart->get_subtotal();
+        if ($subtotal < $min_delivery_total) {
+            wc_add_notice(
+                sprintf(
+                    __('Min %s required for Home Delivery.'),
+                    wc_price($min_delivery_total)
+                ),
+                'error'
+            );
+        }
+    }
 });
 // 
 function convert_date_to_ymd($date) {
